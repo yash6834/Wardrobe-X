@@ -3,20 +3,29 @@ const {
   createOrder,
   getOrders,
   updateOrderStatus,
+  cancelOrder,
+  vendorMarkDelivered,
+  verifyOnlinePayment,
+  getOrderById,
 } = require("../controller/OrderController");
-const { protect, adminOnly } = require("../middlewares/authMiddleware");
+
+const { protect, adminOnly, vendorOnly } = require("../middlewares/authMiddleware");
 
 const router = express.Router();
 
-// ✅ Create order (any logged-in user)
+router.get("/:orderId", protect, getOrderById);
+
 router.post("/", protect, createOrder);
-
-// ✅ Get orders (user sees own orders, admin sees all)
 router.get("/", protect, getOrders);
-
-// ✅ Update order status (admins only)
 router.put("/update/:orderId", protect, adminOnly, updateOrderStatus);
+router.put("/cancel/:orderId", protect, cancelOrder);
+router.post("/verify-payment", protect, verifyOnlinePayment);
 
-
+router.put(
+  "/vendor/orders/:orderId/deliver",
+  protect,
+  vendorOnly,
+  vendorMarkDelivered
+);
 
 module.exports = router;

@@ -2,26 +2,27 @@ const multer = require("multer");
 const path = require("path");
 const fs = require("fs");
 
-// Ensure uploads folder exists
-const uploadsDir = path.join(__dirname, "../uploads");
+// Create uploads/cms folder if not exists
+const uploadsDir = path.join(__dirname, "../uploads/cms");
+
 if (!fs.existsSync(uploadsDir)) {
   fs.mkdirSync(uploadsDir, { recursive: true });
-  console.log("Uploads folder created!");
+  console.log("CMS uploads folder created!");
 }
 
 // Storage configuration
 const storage = multer.diskStorage({
   destination: function (req, file, cb) {
-    cb(null, uploadsDir); // Save in uploads folder
+    cb(null, uploadsDir); // Save inside uploads/cms
   },
   filename: function (req, file, cb) {
     const uniqueSuffix = Date.now() + "-" + Math.round(Math.random() * 1e9);
     const ext = path.extname(file.originalname);
-    cb(null, file.fieldname + "-" + uniqueSuffix + ext);
+    cb(null, "banner-" + uniqueSuffix + ext);
   },
 });
 
-// File filter for images only
+// File filter (images only)
 const fileFilter = (req, file, cb) => {
   if (file.mimetype.startsWith("image/")) {
     cb(null, true);

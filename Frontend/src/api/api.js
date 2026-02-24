@@ -1,23 +1,30 @@
 import axios from "axios";
 
 const api = axios.create({
-  baseURL: "http://localhost:3000", // your backend base URL
+  baseURL: "http://localhost:3000",
 });
 
-// 🔒 Automatically attach token to every request if available
+/* 🔐 Attach token (admin OR user/vendor) */
 api.interceptors.request.use(
   (config) => {
-    const token = localStorage.getItem("token");
+    const token =
+      localStorage.getItem("adminToken") || // admin
+      localStorage.getItem("token");       // user / vendor
+
     if (token) {
       config.headers.Authorization = `Bearer ${token}`;
+    } else {
+      // 🔥 THIS IS THE KEY FIX
+      delete config.headers.Authorization;
     }
+
     return config;
   },
   (error) => Promise.reject(error)
 );
 
-// 🧩 API Endpoints
-export const register = (formData) => api.post("/add", formData);
-export const login = (formData) => api.post("/login", formData);
+/* ================= AUTH APIS ================= */
+export const login = (data) => api.post("/api/users/login", data);
+export const register = (data) => api.post("/api/users/add", data);
 
 export default api;

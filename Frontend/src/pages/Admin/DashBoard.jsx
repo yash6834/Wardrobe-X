@@ -1,8 +1,14 @@
-// src/Pages/Admin/Dashboard.jsx
 import React, { useEffect, useState } from "react";
-import { Users, ShoppingBag, Package } from "lucide-react";
-import { useNavigate } from "react-router-dom";
 import api from "../../api/api";
+import {
+  Users,
+  ShoppingBag,
+  Package,
+  Clock,
+  ArrowUpRight,
+  AlertCircle,
+  TrendingUp,
+} from "lucide-react";
 import {
   LineChart,
   Line,
@@ -15,151 +21,195 @@ import {
   Bar,
 } from "recharts";
 
-const Dashboard = () => {
-  const navigate = useNavigate();
-
-  const [stats, setStats] = useState({
-    totalUsers: 0,
-    totalOrders: 0,
-    totalProducts: 0,
-  });
-
+const DashBoard = () => {
+  const [stats, setStats] = useState(null);
   const [ordersByDate, setOrdersByDate] = useState([]);
-  const [ordersByMonth, setOrdersByMonth] = useState([]);
+  const [monthlySales, setMonthlySales] = useState([]);
+  const [pendingCount, setPendingCount] = useState(0);
 
   useEffect(() => {
-    const fetchData = async () => {
+    const loadDashboard = async () => {
       try {
-        const [usersRes, ordersRes, productsRes, ordersDateRes, monthlyRes] =
+        const [statsRes, ordersDateRes, monthlyRes, pendingProductsRes] =
           await Promise.all([
-            api.get("/admin/users-count"),
-            api.get("/admin/orders-count"),
-            api.get("/admin/products-count"),
-            api.get("/admin/orders-by-date"),
-            api.get("/admin/monthly-sales"),
+            api.get("/api/admin/dashboard/stats"),
+            api.get("/api/admin/dashboard/orders-by-date"),
+            api.get("/api/admin/dashboard/monthly-sales"),
+            api.get("/api/admin/products/pending"),
           ]);
 
-        setStats({
-          totalUsers: usersRes.data.count,
-          totalOrders: ordersRes.data.count,
-          totalProducts: productsRes.data.count,
-        });
-
+        setStats(statsRes.data.stats);
         setOrdersByDate(ordersDateRes.data);
-        setOrdersByMonth(monthlyRes.data);
-      } catch (error) {
-        console.error(error);
+        setMonthlySales(monthlyRes.data);
+        setPendingCount(pendingProductsRes.data.length);
+      } catch (err) {
+        console.error("Dashboard error:", err);
       }
     };
-
-    fetchData();
+    loadDashboard();
   }, []);
 
-  const statBoxes = [
-    {
-      title: "Registered Users",
-      value: stats.totalUsers,
-      icon: <Users size={28} />,
-      color: "bg-blue-600",
-    },
-    {
-      title: "Total Orders",
-      value: stats.totalOrders,
-      icon: <ShoppingBag size={28} />,
-      color: "bg-green-600",
-      onClick: () => navigate("/admin/view-orders"),
-    },
-    {
-      title: "Total Products",
-      value: stats.totalProducts,
-      icon: <Package size={28} />,
-      color: "bg-purple-600",
-    },
-  ];
+  if (!stats) {
+    return (
+      <div className="h-[60vh] flex items-center justify-center">
+        <div className="flex flex-col items-center gap-2">
+          <div className="w-8 h-8 border-4 border-zinc-900 border-t-transparent rounded-full animate-spin"></div>
+          <p className="text-zinc-500 font-medium tracking-tight">Syncing data...</p>
+        </div>
+      </div>
+    );
+  }
 
   return (
-    <div className="p-8 bg-gray-100 min-h-screen">
-      <h1 className="text-3xl font-bold mb-10 text-center text-gray-800">
-        Admin Dashboard
-      </h1>
+    <div className="max-w-[1400px] mx-auto space-y-8 p-2 md:p-6">
+      {/* HEADER */}
+      <div className="flex flex-col md:flex-row md:items-end justify-between gap-4">
+        <div>
+          <h1 className="text-4xl font-extrabold text-zinc-900 tracking-tight">
+            Overview
+          </h1>
+          <p className="text-zinc-500 mt-1 font-medium">
+            Real-time analytics and platform performance.
+          </p>
+        </div>
+        <div className="flex items-center gap-2 text-xs font-bold bg-zinc-100 text-zinc-600 px-3 py-1.5 rounded-full border border-zinc-200">
+          <div className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse" />
+          SYSTEM LIVE
+        </div>
+      </div>
 
-      {/* Stat Boxes */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 mb-12">
-        {statBoxes.map((box, index) => (
-          <div
-            key={index}
-            onClick={box.onClick}
-            className={`flex items-center gap-4 p-6 rounded-xl shadow-md hover:shadow-xl transition-transform transform hover:scale-105 cursor-pointer ${box.color} text-white`}
-          >
-            <div className="p-4 rounded-full bg-white/25 flex items-center justify-center">
-              {box.icon}
+      {/* KPI CARDS */}
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
+        <StatCard
+          title="Total Users"
+          value={stats.totalUsers}
+          icon={<Users size={20} />}
+          trend="+12%"
+        />
+        <StatCard
+          title="Total Orders"
+          value={stats.totalOrders}
+          icon={<ShoppingBag size={20} />}
+          trend="+5.4%"
+        />
+        <StatCard
+          title="Total Products"
+          value={stats.totalProducts}
+          icon={<Package size={20} />}
+        />
+        <StatCard
+          title="Pending Approvals"
+          value={pendingCount}
+          icon={<Clock size={20} />}
+          danger={pendingCount > 0}
+        />
+      </div>
+
+      {/* CHARTS */}
+      <div className="grid grid-cols-1 lg:grid-cols-5 gap-6">
+        {/* Orders by Date (60% width) */}
+        <div className="lg:col-span-3">
+          <ChartCard title="Order Velocity" subtitle="Daily transaction volume">
+            <ResponsiveContainer width="100%" height={320}>
+              <LineChart data={ordersByDate} margin={{ top: 10, right: 10, left: -20, bottom: 0 }}>
+                <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#f0f0f0" />
+                <XAxis dataKey="date" axisLine={false} tickLine={false} tick={{ fontSize: 12, fill: '#94a3b8' }} dy={10} />
+                <YAxis axisLine={false} tickLine={false} tick={{ fontSize: 12, fill: '#94a3b8' }} />
+                <Tooltip 
+                  contentStyle={{ borderRadius: '12px', border: 'none', boxShadow: '0 10px 15px -3px rgba(0,0,0,0.1)' }} 
+                />
+                <Line
+                  type="monotone"
+                  dataKey="count"
+                  stroke="#0f172a"
+                  strokeWidth={4}
+                  dot={{ r: 4, fill: "#0f172a", strokeWidth: 2, stroke: "#fff" }}
+                  activeDot={{ r: 6, shadow: '0 0 10px rgba(0,0,0,0.2)' }}
+                />
+              </LineChart>
+            </ResponsiveContainer>
+          </ChartCard>
+        </div>
+
+        {/* Monthly Sales (40% width) */}
+        <div className="lg:col-span-2">
+          <ChartCard title="Revenue Growth" subtitle="Monthly performance metrics">
+            <ResponsiveContainer width="100%" height={320}>
+              <BarChart data={monthlySales} margin={{ top: 10, right: 10, left: -20, bottom: 0 }}>
+                <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#f0f0f0" />
+                <XAxis dataKey="month" axisLine={false} tickLine={false} tick={{ fontSize: 12, fill: '#94a3b8' }} dy={10} />
+                <YAxis axisLine={false} tickLine={false} tick={{ fontSize: 12, fill: '#94a3b8' }} />
+                <Tooltip cursor={{fill: '#f8fafc'}} contentStyle={{ borderRadius: '12px', border: 'none', boxShadow: '0 10px 15px -3px rgba(0,0,0,0.1)' }} />
+                <Bar
+                  dataKey="total"
+                  fill="#6366f1"
+                  radius={[6, 6, 6, 6]}
+                  barSize={30}
+                />
+              </BarChart>
+            </ResponsiveContainer>
+          </ChartCard>
+        </div>
+      </div>
+
+      {/* ALERTS SECTION */}
+      {pendingCount > 0 && (
+        <div className="bg-white border-2 border-amber-100 rounded-[2rem] p-6 flex items-center justify-between shadow-sm">
+          <div className="flex items-center gap-4">
+            <div className="w-12 h-12 rounded-2xl bg-amber-50 flex items-center justify-center text-amber-600">
+              <AlertCircle size={24} />
             </div>
             <div>
-              <h3 className="text-sm font-medium uppercase tracking-wide">
-                {box.title}
-              </h3>
-              <p className="text-2xl font-bold mt-1">{box.value}</p>
+              <h3 className="font-bold text-zinc-900 text-lg">Action Required</h3>
+              <p className="text-zinc-500 text-sm">
+                There are <span className="font-bold text-amber-600">{pendingCount} products</span> awaiting your review.
+              </p>
             </div>
           </div>
-        ))}
-      </div>
-
-      {/* Sales by Date (Line Chart) */}
-      <div className="bg-white rounded-2xl p-6 shadow-lg mb-10">
-        <h2 className="text-xl font-semibold mb-6 text-gray-700">
-          Sales by Date
-        </h2>
-        <ResponsiveContainer width="100%" height={350}>
-          <LineChart data={ordersByDate}>
-            <CartesianGrid strokeDasharray="3 3" stroke="#e5e7eb" />
-            <XAxis dataKey="date" tick={{ fill: "#4b5563" }} />
-            <YAxis allowDecimals={false} tick={{ fill: "#4b5563" }} />
-            <Tooltip
-              contentStyle={{
-                backgroundColor: "#f9fafb",
-                borderRadius: "0.5rem",
-                border: "none",
-              }}
-            />
-            <Line
-              type="monotone"
-              dataKey="count"
-              stroke="#10b981"
-              strokeWidth={3}
-              dot={{ r: 4 }}
-            />
-          </LineChart>
-        </ResponsiveContainer>
-      </div>
-
-      {/* Sales by Month (Bar Chart) */}
-      <div className="bg-white rounded-2xl p-6 shadow-lg">
-        <h2 className="text-xl font-semibold mb-6 text-gray-700">
-          Monthly Sales
-        </h2>
-        <ResponsiveContainer width="100%" height={350}>
-          <BarChart data={ordersByMonth}>
-            <CartesianGrid strokeDasharray="3 3" stroke="#e5e7eb" />
-            <XAxis dataKey="month" tick={{ fill: "#4b5563" }} />
-            <YAxis allowDecimals={false} tick={{ fill: "#4b5563" }} />
-            <Tooltip
-              contentStyle={{
-                backgroundColor: "#f9fafb",
-                borderRadius: "0.5rem",
-                border: "none",
-              }}
-            />
-            <Bar
-              dataKey="total"
-              fill="#3b82f6"
-              radius={[8, 8, 0, 0]}
-              barSize={50}
-            />
-          </BarChart>
-        </ResponsiveContainer>
-      </div>
+          <button 
+            onClick={() => window.location.href='/admin/pending'}
+            className="px-6 py-2.5 bg-zinc-900 text-white text-sm font-bold rounded-xl hover:bg-zinc-800 transition-all shadow-lg shadow-zinc-200"
+          >
+            Review Now
+          </button>
+        </div>
+      )}
     </div>
   );
 };
 
-export default Dashboard;
+/* ================= REFINED COMPONENTS ================= */
+
+const StatCard = ({ title, value, icon, danger, trend }) => (
+  <div className={`relative overflow-hidden bg-white border border-zinc-100 rounded-[2rem] p-6 shadow-sm transition-all hover:shadow-md`}>
+    <div className="flex justify-between items-start mb-4">
+      <div className={`p-3 rounded-2xl ${danger ? "bg-rose-50 text-rose-600" : "bg-zinc-50 text-zinc-900"}`}>
+        {icon}
+      </div>
+      {trend && (
+        <div className="flex items-center gap-1 text-emerald-600 font-bold text-xs bg-emerald-50 px-2 py-1 rounded-lg">
+          <ArrowUpRight size={12} />
+          {trend}
+        </div>
+      )}
+    </div>
+    <div>
+      <p className="text-xs font-bold text-zinc-400 uppercase tracking-widest">{title}</p>
+      <p className="text-3xl font-black text-zinc-900 mt-1 tracking-tight">
+        {typeof value === 'number' ? value.toLocaleString() : value}
+      </p>
+    </div>
+  </div>
+);
+
+const ChartCard = ({ title, subtitle, children }) => (
+  <div className="bg-white border border-zinc-100 rounded-[2.5rem] p-8 shadow-sm h-full">
+    <div className="mb-8">
+      <h3 className="text-xl font-bold text-zinc-900 tracking-tight">{title}</h3>
+      <p className="text-sm text-zinc-400 font-medium">{subtitle}</p>
+    </div>
+    {children}
+  </div>
+);
+
+export default DashBoard;

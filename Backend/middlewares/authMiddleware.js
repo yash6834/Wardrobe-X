@@ -1,44 +1,66 @@
 // middlewares/authMiddleware.js
 const jwt = require("jsonwebtoken");
-const regisModel = require("../models/Registration");
+const User = require("../models/Registration");
 
+/* ================= AUTH PROTECT ================= */
 const protect = async (req, res, next) => {
   let token;
 
-  if (req.headers.authorization && req.headers.authorization.startsWith("Bearer")) {
+  // Check Bearer token
+  if (
+    req.headers.authorization &&
+    req.headers.authorization.startsWith("Bearer ")
+  ) {
     try {
-      // Extract token
       token = req.headers.authorization.split(" ")[1];
 
       // Verify token
       const decoded = jwt.verify(token, process.env.JWT_SECRET);
 
-      // Find user and attach to request
-      req.user = await regisModel.findById(decoded.id).select("-password");
+      // Attach user to request
+      req.user = await User.findById(decoded.id).select("-password");
 
       if (!req.user) {
-        return res.status(401).json({ success: false, message: "User not found" });
+        return res
+          .status(401)
+          .json({ success: false, message: "User not found" });
       }
 
-      next();
-    } catch (err) {
-      console.error("JWT Error:", err);
-      return res.status(401).json({ success: false, message: "Token invalid" });
+      return next();
+    } catch (error) {
+      console.error("JWT Error:", error);
+      return res
+        .status(401)
+        .json({ success: false, message: "Token invalid or expired" });
     }
   }
 
-  if (!token) {
-    return res.status(401).json({ success: false, message: "No token provided" });
-  }
+  // No token
+  return res
+    .status(401)
+    .json({ success: false, message: "No token provided" });
 };
 
-// ✅ Middleware for Admin-only routes
+/* ================= ADMIN ONLY ================= */
 const adminOnly = (req, res, next) => {
   if (req.user && req.user.role === "admin") {
-    next();
-  } else {
-    return res.status(403).json({ success: false, message: "Access denied. Admins only." });
+    return next();
   }
+
+  return res
+    .status(403)
+    .json({ success: false, message: "Access denied. Admins only." });
 };
 
-module.exports = { protect, adminOnly };
+/* ================= VENDOR ONLY ================= */
+const vendorOnly = (req, res, next) => {
+  if (req.user && req.user.role === "seller") {
+    return next();
+  }
+
+  return res
+    .status(403)
+    .json({ success: false, message: "Access denied. Vendors only." });
+};
+
+module.exports = { protect, adminOnly, vendorOnly };

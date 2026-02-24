@@ -4,32 +4,68 @@ import { RefreshCw, ShieldCheck, Headphones } from "lucide-react";
 const PolicySection = () => {
   const policies = [
     {
-      icon: <RefreshCw size={40} className="text-black" />,
-      title: "Easy Exchange Policy",
-      description: "We offer hassle free exchange policy",
+      icon: <RefreshCw strokeWidth={1.5} />,
+      title: "Easy Exchange",
+      description: "Seamless exchanges designed for your convenience.",
     },
     {
-      icon: <ShieldCheck size={40} className="text-black" />,
-      title: "7 Days Return Policy",
-      description: "We provide 7 days free return policy",
+      icon: <ShieldCheck strokeWidth={1.5} />,
+      title: "7 Days Return",
+      description: "Confidence in every purchase with 7-day free returns.",
     },
     {
-      icon: <Headphones size={40} className="text-black" />,
-      title: "Best Customer Support",
-      description: "We provide 24/7 customer support",
+      icon: <Headphones strokeWidth={1.5} />,
+      title: "Expert Support",
+      description: "Our dedicated team is here to assist you 24/7.",
     },
   ];
 
   return (
-    <section className="w-full py-16 bg-white">
-      <div className="max-w-6xl mx-auto px-5 grid grid-cols-1 sm:grid-cols-3 gap-12 text-center">
-        {policies.map((item, index) => (
-          <div key={index} className="flex flex-col items-center">
-            <div className="mb-4">{item.icon}</div>
-            <h3 className="text-lg font-semibold mb-2">{item.title}</h3>
-            <p className="text-gray-500 text-sm">{item.description}</p>
-          </div>
-        ))}
+    <section className="relative w-full py-24 overflow-hidden bg-white">
+      {/* Decorative Background Blobs for the blur to interact with */}
+      <div className="absolute top-0 left-1/4 w-72 h-72 bg-yellow-100/50 rounded-full blur-[120px] -z-10" />
+      <div className="absolute bottom-0 right-1/4 w-96 h-96 bg-blue-50/50 rounded-full blur-[120px] -z-10" />
+
+      <div className="max-w-6xl mx-auto px-6">
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
+          {policies.map((item, index) => (
+            <div
+              key={index}
+              className="group relative p-8 rounded-[40px] border border-white/40 
+                         bg-white/20 backdrop-blur-xl shadow-[0_8px_32px_0_rgba(0,0,0,0.05)]
+                         hover:shadow-[0_20px_60px_rgba(0,0,0,0.1)] transition-all duration-500
+                         flex flex-col items-center text-center"
+            >
+              {/* Glass Icon Container */}
+              <div className="mb-8 relative">
+                <div className="w-16 h-16 flex items-center justify-center rounded-2xl 
+                                bg-white/60 backdrop-blur-md border border-white/80 shadow-sm
+                                group-hover:bg-black group-hover:text-white group-hover:-rotate-12
+                                transition-all duration-500 ease-in-out">
+                  {React.cloneElement(item.icon, { size: 28 })}
+                </div>
+                {/* Subtle glow behind icon on hover */}
+                <div className="absolute inset-0 bg-black/20 blur-xl opacity-0 group-hover:opacity-100 transition-opacity duration-500 -z-10" />
+              </div>
+
+              {/* Content */}
+              <h3 className="text-sm font-bold tracking-[0.15em] uppercase mb-3 text-gray-900">
+                {item.title}
+              </h3>
+              
+              <p className="text-gray-500 text-sm font-light leading-relaxed max-w-[220px]">
+                {item.description}
+              </p>
+
+              {/* Aesthetic indicator */}
+              <div className="mt-6 flex gap-1">
+                <div className="w-1 h-1 rounded-full bg-gray-300 group-hover:bg-black transition-colors" />
+                <div className="w-4 h-1 rounded-full bg-gray-200 group-hover:bg-black transition-all duration-500" />
+                <div className="w-1 h-1 rounded-full bg-gray-300 group-hover:bg-black transition-colors" />
+              </div>
+            </div>
+          ))}
+        </div>
       </div>
     </section>
   );

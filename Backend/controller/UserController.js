@@ -1,15 +1,12 @@
 const regisModel = require("../models/Registration");
 const jwt = require("jsonwebtoken");
 
-const nodemailer = require("nodemailer");
-const bcrypt = require("bcrypt");
-
-// Generate JWT token
+// ================= TOKEN =================
 const generateToken = (id) => {
   return jwt.sign({ id }, process.env.JWT_SECRET, { expiresIn: "7d" });
 };
 
-// Get users
+// ================= GET USERS (ADMIN) =================
 const getuser = async (req, res) => {
   try {
     const { id, name, email, phone } = req.query;
@@ -21,37 +18,50 @@ const getuser = async (req, res) => {
       ...(phone ? { phone } : {}),
     };
 
-    const result = await regisModel.find(query, "_id name email phone role");
+    const users = await regisModel.find(
+      query,
+      "_id name email phone role brandName memberships"
+    );
+
+    // 🔥 attach activeMembership for each user
+    const result = users.map((user) => {
+      const activeMembership =
+        user.memberships?.find(
+          (m) => m.isActive && new Date(m.endDate) > new Date()
+        ) || null;
+
+      return {
+        ...user.toObject(),
+        activeMembership,
+      };
+    });
+
     res.json(result);
   } catch (err) {
     console.error(err);
-    res.status(500).json({ error: "Server Error", err });
+    res.status(500).json({ error: "Server Error" });
   }
 };
 
-// Register user
+// ================= REGISTER =================
 const adduser = async (req, res) => {
   try {
-    const { name, email, phone, password, role } = req.body;
+    const { name, email, phone, password, role, brandName } = req.body;
 
     if (!name || !email || !phone || !password) {
       return res.status(400).json({ msg: "All fields are required." });
     }
 
-    if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
-      return res.status(400).json({ msg: "Invalid Email format." });
-    }
-
-    if (!/^[6-9]\d{9}$/.test(phone)) {
-      return res.status(400).json({ msg: "Invalid Contact Number." });
-    }
-
-    if (password.length < 6 || password.length > 15) {
-      return res.status(400).json({ msg: "Password must be 6-15 characters." });
+    if (role === "seller" && !brandName) {
+      return res
+        .status(400)
+        .json({ msg: "Brand name is required for seller." });
     }
 
     const existingUser = await regisModel.findOne({ email });
-    if (existingUser) return res.status(400).json({ msg: "Email already registered." });
+    if (existingUser) {
+      return res.status(400).json({ msg: "Email already registered." });
+    }
 
     const newUser = await regisModel.create({
       name,
@@ -59,12 +69,14 @@ const adduser = async (req, res) => {
       phone,
       password,
       role,
+      brandName: role === "seller" ? brandName : undefined,
     });
 
-    const token = generateToken(newUser._id); // Generate JWT on registration
+    const token = generateToken(newUser._id);
 
-    res.json({
-      msg: "New User Added!",
+    res.status(201).json({
+      success: true,
+      msg: "User registered successfully",
       token,
       user: {
         id: newUser._id,
@@ -72,15 +84,18 @@ const adduser = async (req, res) => {
         email: newUser.email,
         phone: newUser.phone,
         role: newUser.role,
+        brandName: newUser.brandName,
+        memberships: newUser.memberships || [],
+        activeMembership: null, // new user has none
       },
     });
   } catch (err) {
-    console.error(err);
-    res.status(500).json({ error: "Server Error", err });
+    console.error("REGISTER ERROR:", err);
+    res.status(500).json({ error: "Server Error" });
   }
 };
 
-// Login user
+// ================= LOGIN =================
 const loginUser = async (req, res) => {
   try {
     const { email, password } = req.body;
@@ -90,30 +105,72 @@ const loginUser = async (req, res) => {
     }
 
     const user = await regisModel.findOne({ email });
-    if (!user) return res.status(400).json({ msg: "User not found." });
+    if (!user) {
+      return res.status(400).json({ msg: "User not found." });
+    }
 
     const isMatch = await user.comparePassword(password);
-    if (!isMatch) return res.status(400).json({ msg: "Invalid password." });
+    if (!isMatch) {
+      return res.status(400).json({ msg: "Invalid password." });
+    }
 
-    const token = generateToken(user._id); // JWT token
+    const token = generateToken(user._id);
+
+    // 🔥 ACTIVE MEMBERSHIP (BACKEND TRUTH)
+    const activeMembership =
+      user.memberships?.find(
+        (m) => m.isActive && new Date(m.endDate) > new Date()
+      ) || null;
 
     res.json({
-      msg: "Login successful",
+      success: true,
       token,
       user: {
         id: user._id,
         name: user.name,
         email: user.email,
-        phone: user.phone,
         role: user.role,
+        memberships: user.memberships || [],
+        activeMembership,
       },
     });
   } catch (err) {
-    console.error(err);
-    res.status(500).json({ error: "Server Error", err });
+    console.error("LOGIN ERROR:", err);
+    res.status(500).json({ error: "Server Error" });
   }
 };
 
+// ================= GET PROFILE =================
+const getUserProfile = async (req, res) => {
+  try {
+    const user = await regisModel
+      .findById(req.user._id)
+      .select("-password");
 
+    if (!user) {
+      return res.status(404).json({ success: false });
+    }
 
-module.exports = { getuser, adduser, loginUser };
+    const activeMembership =
+      user.memberships?.find(
+        (m) => m.isActive && new Date(m.endDate) > new Date()
+      ) || null;
+
+    res.json({
+      success: true,
+      user: {
+        ...user.toObject(),
+        activeMembership,
+      },
+    });
+  } catch (err) {
+    res.status(401).json({ success: false });
+  }
+};
+
+module.exports = {
+  getuser,
+  adduser,
+  loginUser,
+  getUserProfile,
+};

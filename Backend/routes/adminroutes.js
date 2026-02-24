@@ -1,20 +1,37 @@
 const express = require("express");
 const router = express.Router();
-const multer = require("multer");
-const path = require("path");
-const { createProduct, getProducts, deleteProduct } = require("../controller/AdminController");
+const { protect, adminOnly } = require("../middlewares/authMiddleware");
 
-// Multer config
-const storage = multer.diskStorage({
-  destination: (req, file, cb) => cb(null, "uploads/"),
-  filename: (req, file, cb) => cb(null, Date.now() + path.extname(file.originalname)),
-});
-const upload = multer({ storage });
+const {
+  getPendingProducts,
+  approveProduct,
+  getAllProducts, // ✅ ADD THIS
+} = require("../controller/AdminController");
 
-// Routes
-router.post("/products", upload.single("image"), createProduct);
-router.get("/products", getProducts);
-router.delete("/products/:id", deleteProduct); // <-- simple route
+/* ================= PRODUCTS ================= */
 
+// 🔹 Get ALL products (pending + approved + rejected)
+router.get(
+  "/products/all",
+  protect,
+  adminOnly,
+  getAllProducts
+);
+
+// 🔹 Get ONLY pending products
+router.get(
+  "/products/pending",
+  protect,
+  adminOnly,
+  getPendingProducts
+);
+
+// 🔹 Approve / Reject product
+router.put(
+  "/products/:id/approve",
+  protect,
+  adminOnly,
+  approveProduct
+);
 
 module.exports = router;

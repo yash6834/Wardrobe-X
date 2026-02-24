@@ -3,6 +3,34 @@ const bcrypt = require("bcryptjs");
 const User = require("../models/Registration");
 const sendEmail = require("../Utils/sendEmail");
 
+exports.getMe = async (req, res) => {
+  try {
+    const user = await User.findById(req.user._id).select("-password");
+
+    if (!user) {
+      return res.status(404).json({ msg: "User not found" });
+    }
+
+    res.status(200).json({
+      success: true,
+      user: {
+        _id: user._id,
+        name: user.name,
+        email: user.email,
+        phone: user.phone || "",
+        role: user.role,
+        memberships: user.memberships || [],
+      },
+    });
+
+  } catch (err) {
+    console.error("GET ME ERROR:", err);
+    res.status(500).json({ msg: "Server error" });
+  }
+};
+
+
+
 // ===== Forgot Password =====
 exports.forgotPassword = async (req, res) => {
   try {
