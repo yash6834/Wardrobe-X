@@ -1,7 +1,7 @@
-
 const Product = require("../models/Product");
 const UserActivity = require("../models/UserActivity");
-
+const mongoose = require("mongoose");
+const Order = require("../models/Order");
 
 
 /* ================= TRACK ACTIVITY ================= */
@@ -12,20 +12,35 @@ exports.trackActivity = async (req, res) => {
 
     const { productId, action } = req.body;
 
-    await UserActivity.create({
+    if (!productId || !action) {
+      return res.status(400).json({
+        success: false,
+        message: "productId and action required"
+      });
+    }
 
+    if (!req.user) {
+      return res.status(401).json({
+        success: false,
+        message: "User not authenticated"
+      });
+    }
+
+    await UserActivity.create({
       userId: req.user._id,
       productId,
       action
-
     });
 
     res.json({ success: true });
 
   } catch (err) {
 
+    console.error("Track activity error:", err);
+
     res.status(500).json({
-      success: false
+      success: false,
+      message: "Activity tracking failed"
     });
 
   }
@@ -33,30 +48,53 @@ exports.trackActivity = async (req, res) => {
 };
 
 
-/* ================= RECOMMENDED FOR USER ================= */
 
-exports.getRecommended = async (req, res) => {
+/* ================= RECENTLY VIEWED (UNIQUE PRODUCTS) ================= */
+
+exports.getRecentViews = async (req, res) => {
 
   try {
 
-    const { productId } = req.params;
-
-    const currentProduct = await Product.findById(productId);
-
-    if (!currentProduct)
+    if (!req.user) {
       return res.json({ products: [] });
+    }
 
-    const recommendations = await Product.find({
-      category: currentProduct.category,
-      _id: { $ne: productId }
-    })
-    .limit(5);
+    const activities = await UserActivity.aggregate([
+      {
+        $match: {
+          userId: new mongoose.Types.ObjectId(req.user._id),
+          action: "view"
+        }
+      },
+      {
+        $sort: { createdAt: -1 }
+      },
+      {
+        $group: {
+          _id: "$productId",
+          lastViewed: { $first: "$createdAt" }
+        }
+      },
+      {
+        $sort: { lastViewed: -1 }
+      },
+      {
+        $limit: 4
+      }
+    ]);
 
-    res.json({
-      products: recommendations
+    const productIds = activities.map(a => a._id);
+
+    const products = await Product.find({
+      _id: { $in: productIds },
+      isActive: true
     });
 
-  } catch (err) {
+    res.json({ products });
+
+  } catch (error) {
+
+    console.error("Recent views error:", error);
 
     res.status(500).json({
       products: []
@@ -67,6 +105,42 @@ exports.getRecommended = async (req, res) => {
 };
 
 
+
+/* ================= RECOMMENDED PRODUCTS ================= */
+
+exports.getRecommended = async (req, res) => {
+
+  try {
+
+    const { productId } = req.params;
+
+    const currentProduct = await Product.findById(productId);
+
+    if (!currentProduct) {
+      return res.json({ products: [] });
+    }
+
+    const products = await Product.find({
+      category: currentProduct.category,
+      _id: { $ne: productId }
+    }).limit(5);
+
+    res.json({ products });
+
+  } catch (err) {
+
+    console.error("Recommended error:", err);
+
+    res.status(500).json({
+      products: []
+    });
+
+  }
+
+};
+
+
+
 /* ================= CUSTOMERS ALSO BOUGHT ================= */
 
 exports.getAlsoBought = async (req, res) => {
@@ -75,86 +149,55 @@ exports.getAlsoBought = async (req, res) => {
 
     const { productId } = req.params;
 
-    const users = await UserActivity
-      .find({
-        productId,
-        action: "purchase"
-      })
-      .distinct("userId");
+    const objectId = new mongoose.Types.ObjectId(productId);
 
-    const recommendations =
-      await UserActivity.find({
+    const users = await Order.distinct("user", {
+      "items.product": objectId,
+      orderStatus: { $ne: "cancelled" }
+    });
 
-        userId: { $in: users },
-        productId: { $ne: productId },
-        action: "purchase"
+    if (!users.length) {
+      return res.json({ products: [] });
+    }
 
-      })
-      .populate("productId");
-
-    const products =
-      recommendations.map(
-        r => r.productId
-      );
-
-    res.json(products);
-
-  } catch {
-
-    res.status(500).json([]);
-
-  }
-
-};
-
-
-/* ================= POPULAR PRODUCTS ================= */
-
-exports.getPopular = async (req, res) => {
-
-  try {
-
-    const popular =
-      await UserActivity.aggregate([
-
-        {
-          $match: {
-            action: "purchase"
-          }
-        },
-
-        {
-          $group: {
-            _id: "$productId",
-            count: { $sum: 1 }
-          }
-        },
-
-        {
-          $sort: {
-            count: -1
-          }
-        },
-
-        {
-          $limit: 10
+    const recommendations = await Order.aggregate([
+      {
+        $match: {
+          user: { $in: users },
+          orderStatus: { $ne: "cancelled" }
         }
+      },
+      { $unwind: "$items" },
+      {
+        $match: {
+          "items.product": { $ne: objectId }
+        }
+      },
+      {
+        $group: {
+          _id: "$items.product",
+          count: { $sum: 1 }
+        }
+      },
+      { $sort: { count: -1 } },
+      { $limit: 5 }
+    ]);
 
-      ]);
+    const productIds = recommendations.map(r => r._id);
 
-    const ids =
-      popular.map(p => p._id);
+    const products = await Product.find({
+      _id: { $in: productIds },
+      isApproved: true,
+      isActive: true
+    });
 
-    const products =
-      await Product.find({
-        _id: { $in: ids }
-      });
+    res.json({ products });
 
-    res.json(products);
+  } catch (error) {
 
-  } catch {
+    console.error("AlsoBought Error:", error);
 
-    res.status(500).json([]);
+    res.status(500).json({ products: [] });
 
   }
 

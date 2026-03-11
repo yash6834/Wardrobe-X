@@ -5,6 +5,7 @@ const {
   payVendor,
   getVendorPayouts,
   getAllPayouts,
+  paymentFailed
 } = require("../controller/PayoutController");
 
 const {
@@ -13,9 +14,14 @@ const {
   vendorOnly,
 } = require("../middlewares/authMiddleware");
 
-/* ===============================
-   ADMIN
-================================ */
+const { captureDevice } = require("../middlewares/DeviceTracker");
+const { paymentLimiter } = require("../middlewares/rateLimiter");
+
+
+/* =================================================
+   ADMIN ROUTES
+================================================= */
+
 router.post(
   "/admin/payout/:vendorId",
   protect,
@@ -30,14 +36,30 @@ router.get(
   getAllPayouts
 );
 
-/* ===============================
-   VENDOR
-================================ */
+
+/* =================================================
+   VENDOR ROUTES
+================================================= */
+
 router.get(
   "/vendor/payouts",
   protect,
   vendorOnly,
   getVendorPayouts
 );
+
+
+/* =================================================
+   FRAUD DETECTION ROUTE
+================================================= */
+
+router.post(
+  "/payment/payment-failed",
+  protect,
+  paymentLimiter,
+  captureDevice,
+  paymentFailed
+);
+
 
 module.exports = router;

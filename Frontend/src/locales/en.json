@@ -1,0 +1,15 @@
+{
+  "home": "Home",
+  "collection": "Collection",
+  "about": "About",
+  "contact": "Contact",
+  "login_register": "Login / Register",
+  "my_profile": "My Profile",
+  "orders": "Orders",
+  "logout": "Logout",
+  "login": "Login",
+  "close": "Close",
+  "welcome": "Welcome",
+  "add_to_cart": "Add to Cart",
+  "checkout": "Checkout"
+}

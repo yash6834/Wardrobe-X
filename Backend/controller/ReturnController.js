@@ -196,39 +196,54 @@ exports.initiateRefund = async (req, res) => {
     const { refundAmount } = req.body;
 
     if (!refundAmount || refundAmount <= 0) {
-      return res
-        .status(400)
-        .json({ message: "Valid refund amount required" });
+      return res.status(400).json({
+        message: "Valid refund amount required",
+      });
     }
 
     const rma = await Return.findById(req.params.id);
+
     if (!rma) {
-      return res.status(404).json({ message: "Return not found" });
+      return res.status(404).json({
+        message: "Return not found",
+      });
+    }
+
+    // Prevent duplicate refund start
+    if (rma.refundStatus !== "not_started") {
+      return res.status(400).json({
+        message: "Refund already initiated or completed",
+      });
+    }
+
+    // Refund should only happen after item is received
+    if (rma.status !== "received") {
+      return res.status(400).json({
+        message: "Refund allowed only after item is received",
+      });
     }
 
     rma.refundAmount = refundAmount;
-    rma.refundStatus = "completed";
-    rma.status = "refund_completed";
+    rma.refundStatus = "initiated";
 
+    // Keep logistics status unchanged
     rma.timeline.push({
-      status: "refund_completed",
-      message: `Refund of ₹${refundAmount} completed`,
+      status: "refund_initiated",
+      message: `Refund of ₹${refundAmount} initiated`,
     });
 
     await rma.save();
 
-    // 🔔 CREATE CUSTOMER NOTIFICATION
-    await Notification.create({
-      user: rma.userId,
-      title: "Refund Processed",
-      message: `₹${refundAmount} has been refunded to your original payment method.`,
-      type: "refund",
+    res.json({
+      message: "Refund initiated successfully",
+      data: rma,
     });
 
-    res.json(rma);
   } catch (error) {
     console.error("Initiate Refund Error:", error);
-    res.status(500).json({ message: "Failed to initiate refund" });
+    res.status(500).json({
+      message: "Failed to initiate refund",
+    });
   }
 };
 

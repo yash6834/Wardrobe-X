@@ -1,16 +1,23 @@
 import React, { useState, useEffect, useContext, useRef } from "react";
 import { Link, NavLink } from "react-router-dom";
+import { useTranslation } from "react-i18next";
+import i18n from "i18next";
 import logo from "../assets/Images/Men.png";
 import { assets } from "../assets/frontend_assets/assets";
 import { ShopContext } from "../context/ShopContext";
+import { CurrencyContext } from "../context/Currency"; 
 
 const Navbar = () => {
+  const { t } = useTranslation();
+
   const [isOpen, setIsOpen] = useState(false);
   const [profileOpen, setProfileOpen] = useState(false);
   const [scrolled, setScrolled] = useState(false);
 
   const profileRef = useRef(null);
+
   const { cartCount } = useContext(ShopContext);
+  const { currency, setCurrency } = useContext(CurrencyContext); 
 
   const [isLoggedIn, setIsLoggedIn] = useState(
     localStorage.getItem("isLoggedIn") === "true"
@@ -28,6 +35,7 @@ const Navbar = () => {
     const updateLogin = () => {
       setIsLoggedIn(localStorage.getItem("isLoggedIn") === "true");
     };
+
     window.addEventListener("storage", updateLogin);
     return () => window.removeEventListener("storage", updateLogin);
   }, []);
@@ -41,6 +49,7 @@ const Navbar = () => {
     };
 
     document.addEventListener("mousedown", handleClickOutside);
+
     return () => {
       document.removeEventListener("mousedown", handleClickOutside);
     };
@@ -51,16 +60,18 @@ const Navbar = () => {
     localStorage.removeItem("isLoggedIn");
     localStorage.removeItem("token");
     localStorage.removeItem("adminToken");
+
     setIsLoggedIn(false);
     setProfileOpen(false);
+
     window.location.href = "/";
   };
 
   const menuItems = [
-    { path: "/", label: "Home" },
-    { path: "/collection", label: "Collection" },
-    { path: "/about", label: "About" },
-    { path: "/contact", label: "Contact" },
+    { path: "/", label: t("home") },
+    { path: "/collection", label: t("collection") },
+    { path: "/about", label: t("about") },
+    { path: "/contact", label: t("contact") },
   ];
 
   return (
@@ -74,7 +85,7 @@ const Navbar = () => {
         }`}
       >
         <div className="max-w-7xl mx-auto px-6 lg:px-12 flex items-center justify-between">
-          
+
           {/* Logo */}
           <Link to="/" className="flex items-center">
             <img
@@ -107,7 +118,29 @@ const Navbar = () => {
 
           {/* Right Icons */}
           <div className="flex items-center gap-6">
-            
+
+            {/* Language Switcher */}
+            <select
+              onChange={(e) => i18n.changeLanguage(e.target.value)}
+              className="text-xs border border-gray-300 px-2 py-1 rounded-md bg-white"
+              defaultValue={i18n.language}
+            >
+              <option value="en">EN</option>
+              <option value="hi">HI</option>
+              <option value="gu">GU</option>
+            </select>
+
+            {/* Currency Switcher */}
+            <select
+              value={currency}
+              onChange={(e) => setCurrency(e.target.value)}
+              className="text-xs border border-gray-300 px-2 py-1 rounded-md bg-white"
+            >
+              <option value="INR">₹ INR</option>
+              <option value="USD">$ USD</option>
+              <option value="EUR">€ EUR</option>
+            </select>
+
             {/* Profile */}
             <div className="relative" ref={profileRef}>
               <img
@@ -119,13 +152,14 @@ const Navbar = () => {
 
               {profileOpen && (
                 <div className="absolute right-0 mt-4 w-48 bg-white border shadow-xl rounded-md overflow-hidden">
+
                   {!isLoggedIn ? (
                     <Link
                       to="/login"
                       onClick={() => setProfileOpen(false)}
                       className="block px-5 py-3 text-xs uppercase tracking-widest hover:bg-gray-50"
                     >
-                      Login / Register
+                      {t("login_register")}
                     </Link>
                   ) : (
                     <>
@@ -134,23 +168,26 @@ const Navbar = () => {
                         onClick={() => setProfileOpen(false)}
                         className="block px-5 py-3 text-xs uppercase tracking-widest hover:bg-gray-50"
                       >
-                        My Profile
+                        {t("my_profile")}
                       </Link>
+
                       <Link
                         to="/myorders"
                         onClick={() => setProfileOpen(false)}
                         className="block px-5 py-3 text-xs uppercase tracking-widest hover:bg-gray-50"
                       >
-                        Orders
+                        {t("orders")}
                       </Link>
+
                       <button
                         onClick={handleLogout}
                         className="w-full text-left px-5 py-3 text-xs uppercase tracking-widest text-red-500 hover:bg-red-50 font-semibold"
                       >
-                        Logout
+                        {t("logout")}
                       </button>
                     </>
                   )}
+
                 </div>
               )}
             </div>
@@ -162,6 +199,7 @@ const Navbar = () => {
                 alt="Cart"
                 className="w-5 opacity-70 hover:opacity-100 transition"
               />
+
               {cartCount > 0 && (
                 <span className="absolute -top-2 -right-2 bg-black text-white text-[9px] w-4 h-4 rounded-full flex items-center justify-center font-bold">
                   {cartCount}
@@ -177,6 +215,7 @@ const Navbar = () => {
               <span className="w-6 h-[1.5px] bg-black"></span>
               <span className="w-4 h-[1.5px] bg-black self-end"></span>
             </button>
+
           </div>
         </div>
       </header>
@@ -188,11 +227,12 @@ const Navbar = () => {
         }`}
       >
         <div className="p-8">
+
           <button
             onClick={() => setIsOpen(false)}
             className="mb-12 text-gray-400 flex items-center gap-2 uppercase tracking-widest text-xs"
           >
-            <span className="text-xl">✕</span> Close
+            <span className="text-xl">✕</span> {t("close")}
           </button>
 
           <nav className="flex flex-col gap-8">
@@ -213,10 +253,11 @@ const Navbar = () => {
                 onClick={() => setIsOpen(false)}
                 className="text-2xl font-light text-yellow-600"
               >
-                Login
+                {t("login")}
               </Link>
             )}
           </nav>
+
         </div>
       </aside>
 

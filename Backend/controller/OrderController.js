@@ -3,6 +3,7 @@ const Product = require("../models/Product");
 const User = require("../models/Registration");
 const Razorpay = require("razorpay");
 const crypto = require("crypto");
+const FraudLog = require("../models/FroudLog");
 
 const COMMISSION_RATE = 0.1;
 
@@ -14,6 +15,22 @@ const razorpay = new Razorpay({
 
 const createOrder = async (req, res) => {
   try {
+
+    /* ================= FRAUD PROTECTION ================= */
+
+    const userId = req.user._id;
+
+    const isHighRisk = await checkFraudRisk(userId);
+
+    if (isHighRisk) {
+      return res.status(403).json({
+        success: false,
+        message: "Your account is temporarily blocked due to suspicious activity.",
+      });
+    }
+
+    /* ================= ORDER INPUT ================= */
+
     const { items, shippingAddress, paymentMethod } = req.body;
 
     if (!items || items.length === 0) {
@@ -73,6 +90,7 @@ const createOrder = async (req, res) => {
     const createdOrders = [];
 
     for (const item of items) {
+
       const product = await Product.findById(item.productId).populate("vendor");
 
       if (!product) {
@@ -116,7 +134,7 @@ const createOrder = async (req, res) => {
         shippingFee,
         taxAmount,
 
-        totalAmount: finalTotal, // ✅ FIXED HERE
+        totalAmount: finalTotal,
 
         commissionAmount,
 
@@ -127,6 +145,20 @@ const createOrder = async (req, res) => {
       });
 
       createdOrders.push(order);
+
+      /* ===== FRAUD LOG : ORDER CREATED ===== */
+
+      try {
+        await FraudLog.create({
+          userId: req.user._id,
+          ipAddress: req.clientIp,
+          device: req.device,
+          action: "order_created",
+        });
+      } catch (logErr) {
+        console.error("Fraud log error:", logErr.message);
+      }
+
     }
 
     /* ================= COD ================= */
@@ -173,16 +205,19 @@ const createOrder = async (req, res) => {
     });
 
   } catch (err) {
+
     console.error("CREATE ORDER ERROR:", err);
 
     res.status(500).json({
       success: false,
       message: err.message || "Order creation failed",
     });
+
   }
 };
 
 /* ================= VERIFY ONLINE PAYMENT ================= */
+
 const verifyOnlinePayment = async (req, res) => {
   try {
     const {
@@ -199,7 +234,21 @@ const verifyOnlinePayment = async (req, res) => {
       .update(body)
       .digest("hex");
 
+    /* ===== FRAUD LOG : PAYMENT FAILED ===== */
+
     if (expectedSignature !== razorpay_signature) {
+
+      try {
+        await FraudLog.create({
+          userId: req.user._id,
+          ipAddress: req.clientIp,
+          device: req.device,
+          action: "payment_failed",
+        });
+      } catch (logErr) {
+        console.error("Fraud log error:", logErr.message);
+      }
+
       return res.status(400).json({
         success: false,
         message: "Payment verification failed",
@@ -214,10 +263,24 @@ const verifyOnlinePayment = async (req, res) => {
       }
     );
 
+    /* ===== FRAUD LOG : PAYMENT SUCCESS ===== */
+
+    try {
+      await FraudLog.create({
+        userId: req.user._id,
+        ipAddress: req.clientIp,
+        device: req.device,
+        action: "payment_success",
+      });
+    } catch (logErr) {
+      console.error("Fraud log error:", logErr.message);
+    }
+
     res.json({
       success: true,
       message: "Payment verified & orders confirmed",
     });
+
   } catch (err) {
     console.error("VERIFY PAYMENT ERROR:", err);
     res.status(500).json({
@@ -228,6 +291,7 @@ const verifyOnlinePayment = async (req, res) => {
 };
 
 /* ================= GET ORDERS ================= */
+
 const getOrders = async (req, res) => {
   try {
     const query =
@@ -262,6 +326,7 @@ const getOrders = async (req, res) => {
       success: true,
       orders: formattedOrders,
     });
+
   } catch (err) {
     console.error("GET ORDERS ERROR:", err);
     res.status(500).json({
@@ -272,6 +337,7 @@ const getOrders = async (req, res) => {
 };
 
 /* ================= UPDATE STATUS (ADMIN) ================= */
+
 const updateOrderStatus = async (req, res) => {
   const order = await Order.findById(req.params.orderId);
   order.orderStatus = req.body.status;
@@ -279,7 +345,8 @@ const updateOrderStatus = async (req, res) => {
   res.json({ success: true });
 };
 
-/* ================= CANCEL ORDER (USER) ================= */
+/* ================= CANCEL ORDER ================= */
+
 const cancelOrder = async (req, res) => {
   try {
     const { orderId } = req.params;
@@ -317,6 +384,7 @@ const cancelOrder = async (req, res) => {
       success: true,
       message: "Order cancelled successfully",
     });
+
   } catch (err) {
     console.error("CANCEL ORDER ERROR:", err);
     res.status(500).json({
@@ -327,6 +395,7 @@ const cancelOrder = async (req, res) => {
 };
 
 /* ================= VENDOR MARK DELIVERED ================= */
+
 const vendorMarkDelivered = async (req, res) => {
   try {
     const { orderId } = req.params;
@@ -365,6 +434,7 @@ const vendorMarkDelivered = async (req, res) => {
       success: true,
       message: "Order marked as delivered",
     });
+
   } catch (err) {
     console.error("VENDOR DELIVER ERROR:", err);
     res.status(500).json({
@@ -374,6 +444,7 @@ const vendorMarkDelivered = async (req, res) => {
 };
 
 /* ================= GET ORDER BY ID ================= */
+
 const getOrderById = async (req, res) => {
   try {
     const order = await Order.findById(req.params.orderId)
@@ -383,7 +454,6 @@ const getOrderById = async (req, res) => {
       return res.status(404).json({ message: "Order not found" });
     }
 
-    // 🔐 Ensure order belongs to logged-in user
     if (
       order.user.toString() !== req.user._id.toString() &&
       !req.user.isAdmin
@@ -392,10 +462,31 @@ const getOrderById = async (req, res) => {
     }
 
     res.json({ order });
+
   } catch (error) {
     console.error("Get Order By ID Error:", error);
     res.status(500).json({ message: "Failed to fetch order" });
   }
+};
+
+
+
+const checkFraudRisk = async (userId) => {
+
+  const latestLog = await FraudLog.findOne({ userId })
+    .sort({ createdAt: -1 });
+
+  if (!latestLog) return false;
+
+  if (latestLog.riskScore < 80) return false;
+
+  // block user for 15 minutes
+  const blockDuration = 15 * 60 * 1000;
+
+  const isStillBlocked =
+    Date.now() - new Date(latestLog.createdAt).getTime() < blockDuration;
+
+  return isStillBlocked;
 };
 
 module.exports = {
@@ -405,5 +496,6 @@ module.exports = {
   updateOrderStatus,
   cancelOrder,
   vendorMarkDelivered,
-  getOrderById
+  getOrderById,
+  checkFraudRisk
 };

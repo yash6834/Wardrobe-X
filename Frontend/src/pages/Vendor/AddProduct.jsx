@@ -2,7 +2,15 @@ import React, { useState } from "react";
 import api from "../../api/api";
 import { useNavigate } from "react-router-dom";
 import { toast } from "react-toastify";
-import { FiUploadCloud, FiPackage, FiTag, FiDollarSign, FiType } from "react-icons/fi";
+import {
+  FiUploadCloud,
+  FiPackage,
+  FiTag,
+  FiType,
+  FiX
+} from "react-icons/fi";
+
+const MAX_IMAGES = 5;
 
 const VendorAddProduct = () => {
   const navigate = useNavigate();
@@ -24,25 +32,56 @@ const VendorAddProduct = () => {
   const [images, setImages] = useState([]);
   const [preview, setPreview] = useState([]);
 
+  // Handle text input
   const handleChange = (e) => {
     setFormData({ ...formData, [e.target.name]: e.target.value });
   };
 
+  // Handle size stock
   const handleSizeChange = (index, value) => {
     const updatedSizes = [...formData.sizes];
     updatedSizes[index].stock = value;
     setFormData({ ...formData, sizes: updatedSizes });
   };
 
+  // Handle image select (max 5)
   const handleImageSelect = (e) => {
     const files = Array.from(e.target.files);
-    setImages(files);
-    const previews = files.map((file) => URL.createObjectURL(file));
-    setPreview(previews);
+
+    if (images.length + files.length > MAX_IMAGES) {
+      toast.error(`Maximum ${MAX_IMAGES} images allowed`);
+      return;
+    }
+
+    const updatedImages = [...images, ...files];
+    setImages(updatedImages);
+
+    const updatedPreviews = updatedImages.map((file) =>
+      URL.createObjectURL(file)
+    );
+    setPreview(updatedPreviews);
   };
 
+  // Remove image
+  const removeImage = (index) => {
+    const updatedImages = images.filter((_, i) => i !== index);
+    setImages(updatedImages);
+
+    const updatedPreviews = updatedImages.map((file) =>
+      URL.createObjectURL(file)
+    );
+    setPreview(updatedPreviews);
+  };
+
+  // Submit product
   const handleSubmit = async (e) => {
     e.preventDefault();
+
+    if (images.length === 0) {
+      toast.error("Please upload at least one image");
+      return;
+    }
+
     const data = new FormData();
 
     Object.keys(formData).forEach((key) => {
@@ -61,156 +100,202 @@ const VendorAddProduct = () => {
           Authorization: `Bearer ${localStorage.getItem("vendorToken")}`,
         },
       });
+
       toast.success("Product added successfully");
       navigate("/seller/products");
+
     } catch (error) {
-      toast.error("Failed to add product");
+      toast.error(error?.response?.data?.message || "Failed to add product");
     }
   };
 
   return (
     <div className="min-h-screen bg-gray-50 p-4 md:p-8">
       <div className="max-w-5xl mx-auto">
+
+        {/* Header */}
         <header className="mb-8">
-          <h1 className="text-3xl font-extrabold text-gray-900">Add New Product</h1>
-          <p className="text-gray-500">Fill in the details to list your product in the marketplace.</p>
+          <h1 className="text-3xl font-extrabold text-gray-900">
+            Add New Product
+          </h1>
+          <p className="text-gray-500">
+            Upload up to {MAX_IMAGES} images for best results.
+          </p>
         </header>
 
         <form onSubmit={handleSubmit} className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-          {/* Main Info Section */}
+
+          {/* LEFT SIDE */}
           <div className="lg:col-span-2 space-y-6">
-            <div className="bg-white p-6 rounded-xl shadow-sm border border-gray-100">
+
+            {/* Basic Info */}
+            <div className="bg-white p-6 rounded-xl shadow-sm border">
               <h2 className="text-lg font-semibold mb-4 flex items-center gap-2">
-                <FiPackage className="text-blue-600" /> Basic Information
+                <FiPackage className="text-blue-600" />
+                Basic Information
               </h2>
+
               <div className="space-y-4">
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">Product Name</label>
-                  <input
-                    name="name"
-                    type="text"
-                    placeholder="e.g. Premium Cotton Oversized Tee"
-                    onChange={handleChange}
-                    required
-                    className="w-full border-gray-200 border p-3 rounded-lg focus:ring-2 focus:ring-blue-500 outline-none transition-all"
-                  />
-                </div>
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">Description</label>
-                  <textarea
-                    name="description"
-                    rows="4"
-                    placeholder="Describe the material, fit, and style..."
-                    onChange={handleChange}
-                    className="w-full border-gray-200 border p-3 rounded-lg focus:ring-2 focus:ring-blue-500 outline-none transition-all"
-                  />
-                </div>
+
+                <input
+                  name="name"
+                  type="text"
+                  placeholder="Product Name"
+                  onChange={handleChange}
+                  required
+                  className="w-full border p-3 rounded-lg"
+                />
+
+                <textarea
+                  name="description"
+                  rows="4"
+                  placeholder="Description"
+                  onChange={handleChange}
+                  className="w-full border p-3 rounded-lg"
+                />
+
               </div>
             </div>
 
-            <div className="bg-white p-6 rounded-xl shadow-sm border border-gray-100">
+            {/* Sizes */}
+            <div className="bg-white p-6 rounded-xl shadow-sm border">
+
               <h2 className="text-lg font-semibold mb-4 flex items-center gap-2">
-                <FiType className="text-blue-600" /> Inventory & Sizes
+                <FiType className="text-blue-600" />
+                Inventory & Sizes
               </h2>
+
               <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
                 {formData.sizes.map((s, i) => (
-                  <div key={s.size} className="bg-gray-50 p-4 rounded-lg border border-gray-100">
-                    <label className="block text-xs font-bold text-gray-500 uppercase mb-2">Size {s.size}</label>
+                  <div key={s.size}>
+                    <label>Size {s.size}</label>
                     <input
                       type="number"
                       min="0"
                       value={s.stock}
-                      onChange={(e) => handleSizeChange(i, Number(e.target.value))}
-                      className="w-full bg-white border border-gray-200 p-2 rounded focus:ring-1 focus:ring-blue-500 outline-none"
+                      onChange={(e) =>
+                        handleSizeChange(i, Number(e.target.value))
+                      }
+                      className="w-full border p-2 rounded"
                     />
                   </div>
                 ))}
               </div>
+
             </div>
+
           </div>
 
-          {/* Sidebar Section */}
+          {/* RIGHT SIDE */}
           <div className="space-y-6">
-            <div className="bg-white p-6 rounded-xl shadow-sm border border-gray-100">
+
+            {/* Price & Category */}
+            <div className="bg-white p-6 rounded-xl shadow-sm border">
+
               <h2 className="text-lg font-semibold mb-4 flex items-center gap-2">
-                <FiTag className="text-blue-600" /> Pricing & Category
+                <FiTag className="text-blue-600" />
+                Pricing & Category
               </h2>
-              <div className="space-y-4">
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1 flex items-center gap-1">
-                    <FiDollarSign className="text-xs" /> Price
-                  </label>
-                  <input
-                    name="price"
-                    type="number"
-                    placeholder="0.00"
-                    onChange={handleChange}
-                    required
-                    className="w-full border-gray-200 border p-3 rounded-lg focus:ring-2 focus:ring-blue-500 outline-none"
-                  />
-                </div>
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">Category</label>
-                  <input
-                    name="category"
-                    placeholder="e.g. Clothing"
-                    onChange={handleChange}
-                    className="w-full border-gray-200 border p-3 rounded-lg focus:ring-2 focus:ring-blue-500 outline-none"
-                  />
-                </div>
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">Sub-Category</label>
-                  <input
-                    name="subCategory"
-                    placeholder="e.g. T-Shirts"
-                    onChange={handleChange}
-                    className="w-full border-gray-200 border p-3 rounded-lg focus:ring-2 focus:ring-blue-500 outline-none"
-                  />
-                </div>
+
+              <div className="space-y-3">
+
+                <input
+                  name="price"
+                  type="number"
+                  placeholder="Price"
+                  onChange={handleChange}
+                  required
+                  className="w-full border p-3 rounded"
+                />
+
+                <input
+                  name="category"
+                  placeholder="Category"
+                  onChange={handleChange}
+                  className="w-full border p-3 rounded"
+                />
+
+                <input
+                  name="subCategory"
+                  placeholder="Sub Category"
+                  onChange={handleChange}
+                  className="w-full border p-3 rounded"
+                />
+
               </div>
+
             </div>
 
-            <div className="bg-white p-6 rounded-xl shadow-sm border border-gray-100">
-              <h2 className="text-lg font-semibold mb-4 flex items-center gap-2">
-                <FiUploadCloud className="text-blue-600" /> Media
-              </h2>
-              <div className="relative border-2 border-dashed border-gray-300 rounded-xl p-4 hover:bg-gray-50 transition-colors group cursor-pointer">
-                <input
-                  type="file"
-                  accept="image/*"
-                  multiple
-                  onChange={handleImageSelect}
-                  className="absolute inset-0 w-full h-full opacity-0 cursor-pointer"
-                />
-                <div className="text-center">
-                  <FiUploadCloud className="mx-auto text-3xl text-gray-400 group-hover:text-blue-500 mb-2" />
-                  <p className="text-sm text-gray-600">Click or drag to upload</p>
-                  <p className="text-xs text-gray-400 mt-1">PNG, JPG up to 10MB</p>
-                </div>
-              </div>
+            {/* Image Upload */}
+            <div className="bg-white p-6 rounded-xl shadow-sm border">
 
-              {preview.length > 0 && (
-                <div className="grid grid-cols-2 gap-2 mt-4">
-                  {preview.map((img, i) => (
-                    <img
-                      key={i}
-                      src={img}
-                      alt="preview"
-                      className="h-20 w-full object-cover rounded-lg border border-gray-100 shadow-sm"
-                    />
-                  ))}
+              <h2 className="text-lg font-semibold mb-4 flex items-center gap-2">
+                <FiUploadCloud className="text-blue-600" />
+                Media ({images.length}/{MAX_IMAGES})
+              </h2>
+
+              {/* Upload Box */}
+              {images.length < MAX_IMAGES && (
+                <div className="relative border-2 border-dashed p-6 rounded cursor-pointer">
+
+                  <input
+                    type="file"
+                    accept="image/*"
+                    multiple
+                    onChange={handleImageSelect}
+                    className="absolute inset-0 opacity-0 cursor-pointer"
+                  />
+
+                  <div className="text-center">
+                    <FiUploadCloud className="mx-auto text-3xl text-gray-400" />
+                    <p>Click to upload</p>
+                  </div>
+
                 </div>
               )}
+
+              {/* Preview */}
+              {preview.length > 0 && (
+                <div className="grid grid-cols-2 gap-3 mt-4">
+
+                  {preview.map((img, index) => (
+                    <div key={index} className="relative">
+
+                      <img
+                        src={img}
+                        className="h-24 w-full object-cover rounded"
+                        alt=""
+                      />
+
+                      {/* Remove Button */}
+                      <button
+                        type="button"
+                        onClick={() => removeImage(index)}
+                        className="absolute top-1 right-1 bg-red-500 text-white rounded-full p-1"
+                      >
+                        <FiX size={14} />
+                      </button>
+
+                    </div>
+                  ))}
+
+                </div>
+              )}
+
             </div>
 
+            {/* Submit */}
             <button
               type="submit"
-              className="w-full bg-blue-600 hover:bg-blue-700 text-white font-bold py-4 rounded-xl shadow-lg shadow-blue-200 transition-all transform active:scale-95"
+              className="w-full bg-blue-600 text-white py-4 rounded-xl font-bold"
             >
               Publish Product
             </button>
+
           </div>
+
         </form>
+
       </div>
     </div>
   );

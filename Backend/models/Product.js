@@ -2,18 +2,19 @@ const mongoose = require("mongoose");
 
 const productSchema = new mongoose.Schema(
   {
-    // 🔐 Vendor ownership (seller)
+    // 🔐 Vendor ownership
     vendor: {
       type: mongoose.Schema.Types.ObjectId,
       ref: "User",
       required: true,
-      index: true, // 🔥 fast vendor-wise queries
+      index: true,
     },
 
     name: {
       type: String,
       required: true,
       trim: true,
+      index: true, // 🔥 faster search
     },
 
     category: {
@@ -25,6 +26,7 @@ const productSchema = new mongoose.Schema(
     subCategory: {
       type: String,
       required: true,
+      index: true,
     },
 
     description: {
@@ -51,23 +53,33 @@ const productSchema = new mongoose.Schema(
       type: Number,
       required: true,
       min: 0,
+      index: true, // useful for price filters
     },
 
-    // 🖼 Multiple images (URL / path)
-    image: [
-      {
-        type: String,
-        required: true,
+    // 🖼 Multiple images
+    image: {
+      type: [String],
+      required: true,
+      validate: {
+        validator: function (arr) {
+          return arr.length > 0;
+        },
+        message: "At least one image is required",
       },
-    ],
+    },
+
+    // ⭐ OPTIONAL BUT RECOMMENDED (thumbnail)
+    thumbnail: {
+      type: String,
+      default: "",
+    },
 
     // 🛑 Admin approval
-   isApproved: {
-  type: Boolean,
-  default: false,
-  index: true,
-},
-
+    isApproved: {
+      type: Boolean,
+      default: false,
+      index: true,
+    },
 
     // 💰 Commission per product
     commissionPercent: {
@@ -77,16 +89,28 @@ const productSchema = new mongoose.Schema(
       max: 100,
     },
 
-    // 🟢 Product active / inactive
+    // 🟢 Active / inactive
     isActive: {
       type: Boolean,
       default: true,
+      index: true,
     },
+
   },
-  { timestamps: true }
+  {
+    timestamps: true,
+  }
 );
 
-// 🔥 Helpful compound index (vendor + approval)
+// 🔥 Compound index
 productSchema.index({ vendor: 1, isApproved: 1 });
+
+// 🔥 Set thumbnail automatically
+productSchema.pre("save", function (next) {
+  if (this.image.length > 0 && !this.thumbnail) {
+    this.thumbnail = this.image[0];
+  }
+  next();
+});
 
 module.exports = mongoose.model("Product", productSchema);

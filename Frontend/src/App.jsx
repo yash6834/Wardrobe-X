@@ -1,6 +1,10 @@
 import React from "react";
+import "./i18n";
 import { Routes, Route } from "react-router-dom";
 import { ToastContainer } from "react-toastify";
+
+import CurrencyProvider from "./context/Currency.jsx";
+
 
 /* ===== Public Pages ===== */
 import Home from "./pages/Client/Home.jsx";
@@ -28,12 +32,12 @@ import VendorLayout from "./pages/Vendor/VendorLayoout.jsx";
 import Dashboard from "./pages/Admin/DashBoard";
 import ViewProducts from "./pages/Admin/ViewProduct.jsx";
 import ViewOrders from "./pages/Admin/ViewOrders";
-import EditProduct from "./pages/Admin/EditProduct";
 import ReturnsAdmin from "./pages/Admin/ReturnAdmin.jsx";
 import Vendor from "./pages/Admin/Vendors.jsx";
 import PendingApprovals from "./pages/Admin/PendingApprovals.jsx";
 import Revenue from "./pages/Admin/Revenue.jsx";
 import Membership from "./pages/Admin/Membership.jsx";
+import Froud from "./pages/Admin/Froud.jsx"
 
 /* ===== CMS Pages (NEW) ===== */
 import Banners from "./pages/Admin/CMS/Banner.jsx";
@@ -53,6 +57,7 @@ const App = () => {
   return (
     <>
       <ToastContainer />
+      <CurrencyProvider />
       <Routes>
 
         {/* ================= PUBLIC ROUTES ================= */}
@@ -81,13 +86,14 @@ const App = () => {
           <Route path="dashboard" element={<Dashboard />} />
           <Route path="view-products" element={<ViewProducts />} />
           <Route path="orders" element={<ViewOrders />} />
-          <Route path="product/edit/:id" element={<EditProduct />} />
           <Route path="vendor" element={<Vendor />} />
           <Route path="pending" element={<PendingApprovals />} />
           <Route path="products" element={<ViewProducts />} />
           <Route path="revenue" element={<Revenue />} />
           <Route path="membership-plans" element={<Membership />} />
           <Route path="returns" element={<ReturnsAdmin />} />
+          <Route path="froud" element={<Froud />} />
+          
 
           {/* ===== CMS ROUTES (NEW) ===== */}
           <Route path="cms/banners" element={<Banners />} />
@@ -109,6 +115,10 @@ const App = () => {
           <Route path="returns" element={<VendorReturns />} />
 
         </Route>
+
+        
+
+
 
       </Routes>
     </>

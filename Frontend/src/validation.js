@@ -2,35 +2,78 @@
 // User Registration Validation
 // =======================
 export const validateUserForm = (formData) => {
+
   const errors = {};
   let isValid = true;
 
   const nameRegex = /^[A-Za-z]+(?: [A-Za-z]+)*$/;
   const phoneRegex = /^[6-9]\d{9}$/;
-  const emailRegex = /^([a-zA-Z0-9._%+-]+)@([a-zA-Z0-9.-]+)\.([a-zA-Z]{2,})$/;
+  const emailRegex = /^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[A-Za-z]{2,}$/;
   const passRegex = /^(?=.*[A-Za-z])(?=.*\d)[A-Za-z\d@$!%*?&]{6,15}$/;
 
-  if (!nameRegex.test(formData.name)) {
+
+  /* NAME */
+
+  if (!formData.name || formData.name.trim() === "") {
+
     errors.name = "Name is required";
     isValid = false;
+
+  } else if (!nameRegex.test(formData.name)) {
+
+    errors.name = "Name should contain only letters and spaces";
+    isValid = false;
+
   }
 
-  if (!phoneRegex.test(formData.phone)) {
-    errors.phone = "Enter valid 10-digit number without alphabets and symbols.";
+
+  /* PHONE */
+
+  if (!formData.phone || formData.phone.trim() === "") {
+
+    errors.phone = "Phone number is required";
     isValid = false;
+
+  } else if (!phoneRegex.test(formData.phone)) {
+
+    errors.phone = "Enter a valid 10-digit phone number starting with 6-9";
+    isValid = false;
+
   }
 
-  if (!emailRegex.test(formData.email)) {
-    errors.email = "Invalid email address.";
+
+  /* EMAIL */
+
+  if (!formData.email || formData.email.trim() === "") {
+
+    errors.email = "Email is required";
     isValid = false;
+
+  } else if (!emailRegex.test(formData.email)) {
+
+    errors.email = "Enter a valid email address";
+    isValid = false;
+
   }
 
-  if (!passRegex.test(formData.password)) {
-    errors.password = "Password must be 6-15 chars, include letters and digits.";
+
+  /* PASSWORD */
+
+  if (!formData.password || formData.password.trim() === "") {
+
+    errors.password = "Password is required";
     isValid = false;
+
+  } else if (!passRegex.test(formData.password)) {
+
+    errors.password = "Password must be 6-15 characters with letters and numbers";
+    isValid = false;
+
   }
+
 
   return { isValid, errors };
+
 };
 
 // =======================

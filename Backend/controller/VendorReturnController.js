@@ -4,15 +4,18 @@ const Return = require("../models/Return");
 exports.getVendorReturns = async (req, res) => {
   try {
     const returns = await Return.find()
-      .populate("items.product")
+      .populate({
+        path: "items.product",
+        select: "vendor name image"
+      })
       .populate("orderId");
 
-    // only vendor’s products
     const filtered = returns.filter((r) =>
       r.items.some(
         (i) =>
-          i.product.vendor.toString() ===
-          req.user._id.toString()
+          i.product &&
+          i.product.vendor &&
+          i.product.vendor.toString() === req.user._id.toString()
       )
     );
 

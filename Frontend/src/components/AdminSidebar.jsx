@@ -1,5 +1,5 @@
-import React, { useState } from "react";
-import { NavLink, useNavigate } from "react-router-dom";
+import React, { useState, useEffect } from "react";
+import { NavLink, useNavigate, useLocation } from "react-router-dom";
 import {
   LogOut,
   LayoutDashboard,
@@ -14,157 +14,182 @@ import {
   X,
   ChevronDown,
   Image,
-  FileText,
-  Layout
+  Layout,
+  ExternalLink
 } from "lucide-react";
 
 const AdminSidebar = () => {
   const navigate = useNavigate();
+  const location = useLocation();
   const [isOpen, setIsOpen] = useState(false);
-  const [cmsOpen, setCmsOpen] = useState(false); // CMS dropdown state
+  const [cmsOpen, setCmsOpen] = useState(false);
+
+  // Close sidebar automatically when route changes on mobile
+  useEffect(() => {
+    setIsOpen(false);
+  }, [location]);
 
   const handleLogout = () => {
     localStorage.removeItem("adminToken");
+    localStorage.removeItem("token");
     localStorage.setItem("isLoggedIn", "false");
     window.dispatchEvent(new Event("storage"));
-    navigate("/");
+    navigate("/", { replace: true });
   };
 
   const menuItems = [
-    { name: "Dashboard", path: "/admin", icon: <LayoutDashboard size={20} /> },
-    { name: "Vendors", path: "/admin/vendor", icon: <Users size={20} /> },
-    { name: "Products", path: "/admin/products", icon: <Package size={20} /> },
-    { name: "Pending Approvals", path: "/admin/pending", icon: <Clock size={20} /> },
-    { name: "Orders", path: "/admin/orders", icon: <ShoppingBag size={20} /> },
-    { name: "Revenue", path: "/admin/revenue", icon: <IndianRupee size={20} /> },
-    { name: "Membership Plans", path: "/admin/membership-plans", icon: <Crown size={20} /> },
+    { name: "Dashboard", path: "/admin", icon: <LayoutDashboard size={18} /> },
+    { name: "Vendors", path: "/admin/vendor", icon: <Users size={18} /> },
+    { name: "Products", path: "/admin/products", icon: <Package size={18} /> },
+    { name: "Approvals", path: "/admin/pending", icon: <Clock size={18} /> },
+    { name: "Orders", path: "/admin/orders", icon: <ShoppingBag size={18} /> },
+    { name: "Revenue", path: "/admin/revenue", icon: <IndianRupee size={18} /> },
+    { name: "Memberships", path: "/admin/membership-plans", icon: <Crown size={18} /> },
+    { name: "Fraud Logs", path: "/admin/froud", icon: <ShieldCheck size={18} /> }
   ];
-
-  const toggleSidebar = () => setIsOpen(!isOpen);
 
   return (
     <>
-      {/* === MOBILE TRIGGER BUTTON === */}
-      <button
-        onClick={toggleSidebar}
-        className="lg:hidden fixed top-4 left-4 z-50 p-2 bg-slate-950 text-white rounded-lg border border-slate-800 shadow-xl"
-      >
-        {isOpen ? <X size={24} /> : <Menu size={24} />}
-      </button>
+      {/* --- MOBILE TOP BAR --- */}
+      <div className="lg:hidden fixed top-0 left-0 right-0 h-16 bg-slate-950/90 backdrop-blur-md border-b border-slate-800 z-50 flex items-center justify-between px-4">
+        <div className="flex items-center gap-2">
+          <div className="w-8 h-8 bg-indigo-600 rounded-lg flex items-center justify-center text-white">
+            <ShieldCheck size={20} />
+          </div>
+          <span className="text-white font-bold tracking-tight">Admin Console</span>
+        </div>
+        <button
+          onClick={() => setIsOpen(!isOpen)}
+          className="p-2 text-slate-400 hover:text-white transition-colors"
+        >
+          {isOpen ? <X size={24} /> : <Menu size={24} />}
+        </button>
+      </div>
 
+      {/* --- MOBILE OVERLAY --- */}
       {isOpen && (
         <div
-          className="fixed inset-0 bg-black/60 backdrop-blur-sm z-40 lg:hidden"
-          onClick={toggleSidebar}
+          className="fixed inset-0 bg-black/80 backdrop-blur-sm z-40 lg:hidden"
+          onClick={() => setIsOpen(false)}
         />
       )}
 
-      <aside className={`
-        fixed inset-y-0 left-0 z-40 w-72 bg-slate-950 text-slate-400 flex flex-col border-r border-slate-800 
-        transition-transform duration-300 ease-in-out font-sans
+      {/* --- SIDEBAR --- */}
+      <aside
+        className={`
+        fixed inset-y-0 left-0 z-50 w-72 bg-slate-950 flex flex-col border-r border-slate-800 shadow-2xl
+        transition-transform duration-300 ease-[cubic-bezier(0.4,0,0.2,1)]
         ${isOpen ? "translate-x-0" : "-translate-x-full"} 
         lg:translate-x-0 lg:sticky lg:top-0 lg:h-screen
-      `}>
-
-        {/* === HEADER === */}
-        <div className="px-6 py-8 flex items-center gap-3">
-          <div className="w-10 h-10 rounded-xl bg-indigo-600 flex items-center justify-center text-white shadow-lg shadow-indigo-500/30">
-            <ShieldCheck size={24} />
-          </div>
-          <div>
-            <h1 className="text-white font-bold text-lg tracking-wide">
-              Admin Panel
-            </h1>
-            <p className="text-xs text-slate-500 font-medium">Master Control</p>
+      `}
+      >
+        {/* LOGO AREA */}
+        <div className="p-8">
+          <div className="flex items-center gap-3">
+            <div className="w-10 h-10 rounded-xl bg-indigo-600 flex items-center justify-center text-white shadow-lg shadow-indigo-500/20">
+              <ShieldCheck size={24} />
+            </div>
+            <div>
+              <h1 className="text-white font-black text-xl tracking-tight leading-none">
+                PANEL<span className="text-indigo-500">.</span>
+              </h1>
+              <p className="text-[10px] text-slate-500 font-bold uppercase tracking-[0.2em] mt-1.5">
+                Management v2.0
+              </p>
+            </div>
           </div>
         </div>
 
-        {/* === NAVIGATION === */}
-        <nav className="flex-1 flex flex-col gap-1.5 px-3 overflow-y-auto custom-scrollbar">
-          <p className="px-4 text-xs font-bold text-slate-600 uppercase tracking-wider mb-2 mt-2">
-            Main Menu
-          </p>
+        {/* NAVIGATION */}
+        <nav className="flex-1 flex flex-col gap-1 px-4 overflow-y-auto custom-scrollbar">
+          <div className="px-4 mb-4 mt-2">
+            <span className="text-[10px] font-black text-slate-600 uppercase tracking-widest">
+              Main Navigation
+            </span>
+          </div>
 
-          {/* Existing Menu Items */}
           {menuItems.map((item) => (
             <NavLink
               key={item.name}
               to={item.path}
               end={item.path === "/admin"}
-              onClick={() => setIsOpen(false)}
-              className={({ isActive }) =>
-                `group relative flex items-center gap-3.5 px-4 py-3 rounded-xl font-medium transition-all duration-200
+              className={({ isActive }) => `
+                group flex items-center gap-3.5 px-4 py-3 rounded-xl text-sm font-semibold transition-all duration-200
                 ${
                   isActive
-                    ? "bg-indigo-600/10 text-indigo-400 shadow-sm"
-                    : "hover:bg-slate-900 hover:text-slate-200"
-                }`
-              }
+                    ? "bg-indigo-600 text-white shadow-lg shadow-indigo-600/20"
+                    : "text-slate-400 hover:bg-slate-900 hover:text-slate-100"
+                }
+              `}
             >
-              {({ isActive }) => (
-                <>
-                  {isActive && (
-                    <span className="absolute left-0 top-1/2 -translate-y-1/2 h-8 w-1 bg-indigo-500 rounded-r-full" />
-                  )}
-                  <span className={`transition-colors ${isActive ? "text-indigo-400" : "text-slate-500 group-hover:text-slate-300"}`}>
-                    {item.icon}
-                  </span>
-                  <span className="text-sm tracking-wide">{item.name}</span>
-                </>
-              )}
+              <span className="transition-transform group-hover:scale-110">
+                {item.icon}
+              </span>
+              {item.name}
             </NavLink>
           ))}
 
-          {/* ===== CMS DROPDOWN ===== */}
-          <div>
+          {/* CMS DROPDOWN */}
+          <div className="mt-4">
             <button
               onClick={() => setCmsOpen(!cmsOpen)}
-              className="w-full flex items-center justify-between px-4 py-3 rounded-xl hover:bg-slate-900 transition-all"
+              className={`w-full flex items-center justify-between px-4 py-3 rounded-xl text-sm font-semibold transition-all
+                ${cmsOpen ? "text-slate-100 bg-slate-900/50" : "text-slate-400 hover:bg-slate-900"}
+              `}
             >
               <div className="flex items-center gap-3.5">
-                <Layout size={20} className="text-slate-500" />
-                <span className="text-sm tracking-wide">CMS</span>
+                <Layout size={18} />
+                <span>CMS Management</span>
               </div>
               <ChevronDown
-                size={18}
-                className={`transition-transform ${cmsOpen ? "rotate-180" : ""}`}
+                size={16}
+                className={`transition-transform duration-300 ${cmsOpen ? "rotate-180 text-indigo-400" : ""}`}
               />
             </button>
 
-            {cmsOpen && (
-              <div className="ml-8 mt-1 flex flex-col gap-1">
-                <NavLink
-                  to="/admin/cms/banners"
-                  className="flex items-center gap-2 px-3 py-2 rounded-lg hover:bg-slate-900 text-sm"
-                >
-                  <Image size={16} /> Banners
-                </NavLink>
-
-                
-              </div>
-            )}
+            <div
+              className={`overflow-hidden transition-all duration-300 ${
+                cmsOpen ? "max-h-40 opacity-100 mt-1" : "max-h-0 opacity-0"
+              }`}
+            >
+              <NavLink
+                to="/admin/cms/banners"
+                className="flex items-center gap-3 ml-9 px-4 py-2.5 rounded-lg text-xs font-bold text-slate-500 hover:text-indigo-400 hover:bg-indigo-400/5 transition-all"
+              >
+                <Image size={14} /> Banners
+              </NavLink>
+            </div>
           </div>
-
         </nav>
 
-        {/* === FOOTER === */}
-        <div className="p-4 border-t border-slate-800">
-          <div className="bg-slate-900 rounded-2xl p-4">
-            <div className="flex items-center gap-3 mb-3">
-              
-              
+        {/* FOOTER */}
+        <div className="p-4 mt-auto">
+          <div className="bg-gradient-to-b from-slate-900 to-slate-950 rounded-2xl p-4 border border-slate-800/50">
+            <div className="flex items-center gap-3 mb-4 px-1">
+              <div className="w-8 h-8 rounded-full bg-slate-800 border border-slate-700 flex items-center justify-center text-[10px] font-bold text-indigo-400">
+                AD
+              </div>
+              <div className="flex flex-col">
+                <span className="text-white text-xs font-bold">Main Admin</span>
+                <span className="text-[9px] text-emerald-500 font-bold uppercase tracking-tighter italic">
+                  ● Verified Session
+                </span>
+              </div>
             </div>
 
             <button
               onClick={handleLogout}
-              className="w-full flex items-center justify-center gap-2 bg-slate-800 hover:bg-red-500/10 hover:text-red-400 text-slate-300 text-sm font-medium py-2.5 rounded-xl transition-all group"
+              className="w-full group flex items-center justify-center gap-2 bg-red-500/10 hover:bg-red-500 text-red-500 hover:text-white text-xs font-bold py-3 rounded-xl transition-all duration-300"
             >
-              <LogOut size={16} className="group-hover:-translate-x-1 transition-transform" />
-              Sign Out
+              <LogOut size={14} className="group-hover:-translate-x-1 transition-transform" />
+              Sign Out Securely
             </button>
           </div>
         </div>
       </aside>
+
+      {/* Spacing for mobile content so it doesn't hide under the header */}
+      <div className="lg:hidden h-16" />
     </>
   );
 };

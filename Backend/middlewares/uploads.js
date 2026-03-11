@@ -2,41 +2,93 @@ const multer = require("multer");
 const path = require("path");
 const fs = require("fs");
 
-// Create uploads/cms folder if not exists
-const uploadsDir = path.join(__dirname, "../uploads/cms");
 
-if (!fs.existsSync(uploadsDir)) {
-  fs.mkdirSync(uploadsDir, { recursive: true });
+// ==============================
+// CREATE FOLDERS IF NOT EXIST
+// ==============================
+
+const productDir = path.join(__dirname, "../uploads/products");
+const cmsDir = path.join(__dirname, "../uploads/cms");
+
+if (!fs.existsSync(productDir)) {
+  fs.mkdirSync(productDir, { recursive: true });
+  console.log("Products uploads folder created!");
+}
+
+if (!fs.existsSync(cmsDir)) {
+  fs.mkdirSync(cmsDir, { recursive: true });
   console.log("CMS uploads folder created!");
 }
 
-// Storage configuration
+
+// ==============================
+// STORAGE CONFIG
+// ==============================
+
 const storage = multer.diskStorage({
+
   destination: function (req, file, cb) {
-    cb(null, uploadsDir); // Save inside uploads/cms
+
+    // detect route
+    if (req.baseUrl.includes("cms")) {
+      cb(null, cmsDir);
+    }
+    else if (req.baseUrl.includes("product")) {
+      cb(null, productDir);
+    }
+    else {
+      cb(null, productDir);
+    }
+
   },
+
   filename: function (req, file, cb) {
-    const uniqueSuffix = Date.now() + "-" + Math.round(Math.random() * 1e9);
+
+    const uniqueSuffix =
+      Date.now() + "-" + Math.round(Math.random() * 1e9);
+
     const ext = path.extname(file.originalname);
-    cb(null, "banner-" + uniqueSuffix + ext);
+
+    cb(null, "img-" + uniqueSuffix + ext);
+
   },
+
 });
 
-// File filter (images only)
+
+// ==============================
+// FILE FILTER
+// ==============================
+
 const fileFilter = (req, file, cb) => {
+
   if (file.mimetype.startsWith("image/")) {
     cb(null, true);
-  } else {
-    cb(new Error("Only image files are allowed!"), false);
   }
+  else {
+    cb(new Error("Only image files allowed"), false);
+  }
+
 };
 
-// Max file size 5MB
+
+// ==============================
+// LIMITS
+// ==============================
+
 const limits = {
   fileSize: 5 * 1024 * 1024,
 };
 
-// Upload instance
-const upload = multer({ storage, fileFilter, limits });
+
+// ==============================
+// EXPORT
+// ==============================
+
+const upload = multer({
+  storage,
+  fileFilter,
+  limits,
+});
 
 module.exports = upload;

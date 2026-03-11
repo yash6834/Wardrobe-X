@@ -118,4 +118,7 @@ const orderSchema = new mongoose.Schema(
   { timestamps: true }
 );
 
+/* 🔥 IMPORTANT FOR ALSO BOUGHT FEATURE */
+orderSchema.index({ "items.product": 1 });
+
 module.exports = mongoose.model("Order", orderSchema);

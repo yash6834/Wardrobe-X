@@ -21,7 +21,12 @@ const membershipRoutes = require("./routes/MemmbershipRoutes");
 const returnRoutes = require("./routes/ReturnRoutes");
 const notificationRoutes = require("./routes/NotificationRoutes");
 const CMSRoutes = require("./routes/CMSRoutes")
-const activityRoutes = require("./routes/ActivityRoutes")
+const activityroutes = require("./routes/ActivityRoutes")
+const recommendationRoutes = require("./routes/Recomendation");
+const paymentRoutes = require("./routes/Payment");
+const fraudRoutes = require("./routes/Froud");
+const currencyRoutes = require( "./routes/CurrencyRoutes");
+
 
 
 const app = express();
@@ -80,8 +85,19 @@ app.use("/api/notifications", notificationRoutes);
 
 app.use("/api/cms", CMSRoutes);
 
-app.use("/api/activity", activityRoutes)
+app.use("/api/activity",activityroutes );
 
+
+app.use("/api/recommendations", recommendationRoutes);
+
+app.use("/api", paymentRoutes);
+
+
+app.use("/api", fraudRoutes);
+
+
+
+app.use("/api/currency", currencyRoutes);
 
 /* ================= HEALTH CHECK ================= */
 app.get("/", (req, res) => {

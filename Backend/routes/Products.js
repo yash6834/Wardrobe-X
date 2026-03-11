@@ -1,23 +1,46 @@
 const express = require("express");
 const router = express.Router();
+
 const {
   createProduct,
   getProducts,
   getProductById,
   updateProduct,
 } = require("../controller/productController");
+
 const upload = require("../middlewares/uploads");
 
-// ✅ Create a new product (with image upload)
-router.post("/", upload.single("image"), createProduct);
 
-// ✅ Get all products
+/* ===============================
+   CREATE PRODUCT (MULTIPLE IMAGES)
+   =============================== */
+router.post(
+  "/",
+  upload.array("image", 10), // ✅ allow up to 10 images
+  createProduct
+);
+
+
+/* ===============================
+   GET ALL PRODUCTS
+   =============================== */
 router.get("/", getProducts);
 
-// ✅ Get product by ID
+
+/* ===============================
+   GET PRODUCT BY ID
+   =============================== */
 router.get("/:id", getProductById);
 
-// ✅ Update product (with optional new image)
-router.put("/:id", upload.single("image"), updateProduct);
+
+/* ===============================
+   UPDATE PRODUCT (MULTIPLE IMAGES)
+   =============================== */
+router.put(
+  "/:id",
+  upload.array("image", 10), // ✅ allow multiple images update
+  updateProduct
+);
+
 
 module.exports = router;

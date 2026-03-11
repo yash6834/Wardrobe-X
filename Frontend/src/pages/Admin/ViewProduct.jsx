@@ -95,14 +95,14 @@ const ViewProducts = () => {
               {/* IMAGE CONTAINER */}
               <div className="relative aspect-[4/5] bg-zinc-50 overflow-hidden">
                 <img
-                  src={
-                    item.image
-                      ? `http://localhost:3000${item.image}`
-                      : "https://via.placeholder.com/400"
-                  }
-                  alt={item.name}
-                  className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-110"
-                />
+  src={
+    item.image && item.image.length > 0
+      ? `http://localhost:3000${item.image[0]}`
+      : "https://via.placeholder.com/400"
+  }
+  alt={item.name}
+  className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-110"
+/>
                 
                 {/* Status Badge */}
                 <div className="absolute top-4 left-4">
@@ -127,15 +127,10 @@ const ViewProducts = () => {
 
                 {/* ACTION BUTTONS */}
                 <div className="mt-auto pt-4 border-t border-zinc-50 flex gap-2">
-                  <button
-                    onClick={() => navigate(`/admin/product/edit/${item._id}`)}
-                    className="flex-1 flex items-center justify-center gap-2 py-3 bg-zinc-900 text-white rounded-xl text-xs font-bold hover:bg-zinc-800 transition-all active:scale-95"
-                  >
-                    <Pencil size={14} /> Edit
-                  </button>
+                  
                   <button
                     onClick={() => deleteProduct(item._id)}
-                    className="w-12 flex items-center justify-center bg-rose-50 text-rose-500 rounded-xl hover:bg-rose-500 hover:text-white transition-all active:scale-95"
+                    className="flex-1 flex items-center justify-center gap-2 py-3 bg-zinc-900 text-white rounded-xl text-xs font-bold hover:bg-zinc-800 transition-all active:scale-95"
                     title="Delete"
                   >
                     <Trash2 size={16} />

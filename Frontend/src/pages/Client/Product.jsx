@@ -2,17 +2,18 @@ import React, { useEffect, useState, useContext } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import api from "../../api/api";
 import { ShopContext } from "../../context/ShopContext";
+import { CurrencyContext } from "../../context/Currency";
 import { toast } from "react-toastify";
+import RecommendedProducts from "../../components/RecommendedProducts";
+import AlsoBought from "../../components/AlsoBought";
+
 import {
-  ShoppingBag,
   Truck,
   RefreshCcw,
   ShieldCheck,
   Star,
   ChevronRight
 } from "lucide-react";
-import RecommendedProducts from "../../components/RecommendedProducts";
-import AlsoBought from "../../components/AlsoBought";
 
 const Product = () => {
 
@@ -23,18 +24,24 @@ const Product = () => {
   const [user, setUser] = useState(null);
   const [size, setSize] = useState("");
   const [showSizeGuide, setShowSizeGuide] = useState(false);
+  const [selectedImage, setSelectedImage] = useState("");
 
+  const [convertedPrice, setConvertedPrice] = useState(null);
+
+  const { currency } = useContext(CurrencyContext);
   const { addToCart: addToCartContext } = useContext(ShopContext);
 
+  const currencySymbols = {
+    INR: "₹",
+    USD: "$",
+    EUR: "€",
+  };
 
   /* ================= FETCH PRODUCT ================= */
 
   useEffect(() => {
-
     const fetchProduct = async () => {
-
       try {
-
         const res = await api.get(`/api/product/${productId}`);
 
         if (!res.data?.success)
@@ -42,13 +49,14 @@ const Product = () => {
 
         setProductData(res.data);
 
-      } catch (err) {
+        if (res.data.image?.length > 0) {
+          setSelectedImage(res.data.image[0]);
+        }
 
+      } catch (err) {
         console.error(err);
         toast.error("Failed to fetch product");
-
       }
-
     };
 
     fetchProduct();
@@ -63,14 +71,10 @@ const Product = () => {
     const fetchUser = async () => {
 
       try {
-
         const res = await api.get("/api/users/user");
         setUser(res.data.user);
-
       } catch {
-
         setUser(null);
-
       }
 
     };
@@ -80,16 +84,51 @@ const Product = () => {
   }, []);
 
 
+  /* ================= CURRENCY CONVERSION ================= */
+
+  useEffect(() => {
+
+    const convertCurrency = async () => {
+
+      if (!productData) return;
+
+      try {
+
+        if (currency === "INR") {
+          setConvertedPrice(productData.price);
+        }
+
+        else {
+
+          const res = await api.get(
+            `/api/currency/convert?amount=${productData.price}&currency=${currency}`
+          );
+
+          if (res.data.success) {
+            setConvertedPrice(Number(res.data.converted));
+          }
+
+        }
+
+      } catch (error) {
+        setConvertedPrice(productData.price);
+      }
+
+    };
+
+    convertCurrency();
+
+  }, [currency, productData]);
+
+
   /* ================= LOADING ================= */
 
   if (!productData) {
-
     return (
       <div className="h-screen flex items-center justify-center bg-white">
         <div className="w-8 h-8 border-2 border-gray-200 border-t-black rounded-full animate-spin"></div>
       </div>
     );
-
   }
 
 
@@ -104,7 +143,8 @@ const Product = () => {
   const discountPercent =
     activeMembership?.discountPercent || 0;
 
-  const originalPrice = productData.price;
+  const originalPrice =
+    convertedPrice || productData.price;
 
   const finalPrice =
     discountPercent > 0
@@ -164,365 +204,197 @@ const Product = () => {
   };
 
 
-  return (
+ return (
+  <div className="bg-white min-h-screen">
 
-    <div className="bg-white min-h-screen">
+    {/* ================= BREADCRUMB ================= */}
 
+    <nav className="pt-28 px-6 md:px-16 lg:px-24 flex items-center gap-2 text-[11px] uppercase tracking-widest text-gray-400">
 
-      {/* ================= BREADCRUMB ================= */}
+      <span
+        onClick={() => navigate("/")}
+        className="cursor-pointer hover:text-black hover:underline"
+      >
+        Home
+      </span>
 
-      <nav className="pt-28 px-6 md:px-16 lg:px-24 flex items-center gap-2 text-[10px] uppercase tracking-widest text-gray-400">
+      <ChevronRight size={10} />
 
-        <span
-          onClick={() => navigate("/")}
-          className="cursor-pointer hover:text-black"
-        >
-          Home
-        </span>
+      <span
+        onClick={() => navigate("/collection")}
+        className="cursor-pointer hover:text-black hover:underline"
+      >
+        Collection
+      </span>
 
-        <ChevronRight size={10} />
+      <ChevronRight size={10} />
 
-        <span
-          onClick={() => navigate("/collection")}
-          className="cursor-pointer hover:text-black"
-        >
-          Collection
-        </span>
+      <span className="text-black font-semibold">
+        {productData.name}
+      </span>
 
-        <ChevronRight size={10} />
-
-        <span className="text-black font-bold">
-          {productData.name}
-        </span>
-
-      </nav>
+    </nav>
 
 
-      {/* ================= MAIN ================= */}
+    {/* ================= MAIN ================= */}
 
-      <main className="max-w-[1440px] mx-auto px-6 md:px-16 lg:px-24 py-10">
+    <main className="max-w-[1440px] mx-auto px-6 md:px-16 lg:px-24 py-12">
 
-        <div className="flex flex-col lg:flex-row gap-16">
+      <div className="flex flex-col lg:flex-row gap-16">
 
 
-          {/* ================= IMAGE ================= */}
+        {/* ================= IMAGE GALLERY ================= */}
 
-          <div className="w-full lg:w-[40%]">
+        <div className="w-full lg:w-[40%] flex gap-6">
 
-            <div className="relative">
+          <div className="flex flex-col gap-3">
 
-              <div className="overflow-hidden border bg-[#FAFAFA]">
+            {productData.image?.slice(0, 5).map((img, index) => (
 
-                <img
-                  src={productData.image?.[0]}
-                  alt={productData.name}
-                  className="w-full h-auto object-contain max-h-[65vh]"
-                />
+              <img
+                key={index}
+                src={img}
+                alt=""
+                onClick={() => setSelectedImage(img)}
+                className={`w-20 h-24 object-cover cursor-pointer rounded-md border
+                ${selectedImage === img ? "border-black" : "border-gray-200"}
+                `}
+              />
 
-              </div>
+            ))}
 
-              {discountPercent > 0 && (
+          </div>
 
-                <div className="absolute top-0 left-0 bg-black text-white text-[9px] font-bold px-4 py-2 uppercase">
 
-                  Member Offer
+          <div className="flex-1">
 
-                </div>
+            <div className="border rounded-lg bg-gray-50">
 
-              )}
+              <img
+                src={selectedImage}
+                alt={productData.name}
+                className="w-full object-contain max-h-[65vh]"
+              />
 
             </div>
 
           </div>
 
-
-          {/* ================= INFO ================= */}
-
-          <div className="w-full lg:w-[40%]">
+        </div>
 
 
-            {/* Rating */}
+        {/* ================= PRODUCT INFO ================= */}
 
-            <div className="flex items-center gap-1 text-yellow-500 mb-4">
+        <div className="w-full lg:w-[40%]">
 
-              {[...Array(5)].map((_, i) => (
-                <Star key={i} size={12} fill="currentColor"/>
-              ))}
+          <div className="flex items-center gap-1 text-yellow-500 mb-4">
 
-              <span className="text-[10px] text-gray-400 ml-2">
+            {[...Array(5)].map((_, i) => (
+              <Star key={i} size={14} fill="currentColor" />
+            ))}
 
-                (4.8 Reviews)
-
-              </span>
-
-            </div>
+          </div>
 
 
-            {/* Name */}
-
-            <h1 className="text-4xl font-light mb-4">
-
-              {productData.name}
-
-            </h1>
+          <h1 className="text-4xl font-semibold mb-4">
+            {productData.name}
+          </h1>
 
 
-            {/* Price */}
+          {/* PRICE */}
 
-            <div className="flex items-end gap-4 mb-6">
+          <div className="flex items-end gap-4 mb-6">
 
-              <p className="text-3xl font-medium">
+            <p className="text-3xl font-bold text-gray-900">
 
-                ₹{finalPrice}
-
-              </p>
-
-              {discountPercent > 0 && (
-
-                <p className="text-xl text-gray-300 line-through">
-
-                  ₹{originalPrice}
-
-                </p>
-
-              )}
-
-            </div>
-
-
-            {/* Description */}
-
-            <p className="text-sm text-gray-600 mb-8">
-
-              {productData.description}
+              {currencySymbols[currency]}
+              {finalPrice}
 
             </p>
 
+            {discountPercent > 0 && (
 
-            {/* Size Guide Button */}
+              <p className="text-lg text-gray-400 line-through">
 
-            <div className="flex justify-between mb-4">
+                {currencySymbols[currency]}
+                {originalPrice}
 
-              <h4 className="text-xs font-bold">
+              </p>
 
-                Select Size
-
-              </h4>
-
-              <button
-                onClick={() =>
-                  setShowSizeGuide(true)
-                }
-                className="text-xs border-b"
-              >
-                Size Guide
-              </button>
-
-            </div>
-
-
-            {/* Sizes */}
-
-            <div className="grid grid-cols-4 gap-3 mb-8">
-
-              {productData.sizes.map((s) => (
-
-                <button
-                  key={s.size}
-                  disabled={s.stock === 0}
-                  onClick={() =>
-                    setSize(s.size)
-                  }
-                  className={`
-                    h-12 border
-                    ${
-                      size === s.size
-                        ? "bg-black text-white"
-                        : "bg-white"
-                    }
-                  `}
-                >
-
-                  {s.size}
-
-                </button>
-
-              ))}
-
-            </div>
-
-
-            {/* Add to Cart */}
-
-            <button
-              onClick={handleAddToCart}
-              className="w-full py-4 bg-black text-white"
-            >
-
-              Add to Shopping Bag
-
-            </button>
-
-
-            {/* Benefits */}
-
-            <div className="mt-10 space-y-4">
-
-              <div className="flex gap-3">
-
-                <Truck size={18}/>
-                Express Shipping
-
-              </div>
-
-              <div className="flex gap-3">
-
-                <RefreshCcw size={18}/>
-                Easy Returns
-
-              </div>
-
-              <div className="flex gap-3">
-
-                <ShieldCheck size={18}/>
-                Authentic Product
-
-              </div>
-
-            </div>
+            )}
 
           </div>
 
-        </div>
 
-      </main>
-      {/* ================= RECOMMENDED PRODUCTS ================= */}
-
-    <RecommendedProducts />
+          <p className="text-sm text-gray-600 mb-8">
+            {productData.description}
+          </p>
 
 
+          {/* SIZE */}
 
-      {/* ================= SIZE GUIDE MODAL ================= */}
+          <div className="grid grid-cols-4 gap-3 mb-8">
 
-      {showSizeGuide && (
+            {productData.sizes.map((s) => (
 
-        <div
-          onClick={() =>
-            setShowSizeGuide(false)
-          }
-          className="fixed inset-0 bg-black/50 flex items-center justify-center z-50"
-        >
+              <button
+                key={s.size}
+                disabled={s.stock === 0}
+                onClick={() => setSize(s.size)}
+                className={`h-12 border
+                ${size === s.size ? "bg-black text-white" : ""}
+                ${s.stock === 0 ? "opacity-40" : ""}
+                `}
+              >
+                {s.size}
+              </button>
 
-          <div
-            onClick={(e) =>
-              e.stopPropagation()
-            }
-            className="bg-white p-6 rounded-xl w-[90%] max-w-md"
+            ))}
+
+          </div>
+
+
+          <button
+            onClick={handleAddToCart}
+            className="w-full py-4 bg-black text-white font-bold"
           >
+            Add to Shopping Bag
+          </button>
 
-            <div className="flex justify-between mb-4">
 
-              <h3 className="font-bold">
-                Size Guide
-              </h3>
+          {/* BENEFITS */}
 
-              <button
-                onClick={() =>
-                  setShowSizeGuide(false)
-                }
-              >
-                ✕
-              </button>
+          <div className="mt-10 space-y-4 text-sm text-gray-700">
 
+            <div className="flex items-center gap-3">
+              <Truck size={18} />
+              <span>Express Shipping</span>
             </div>
 
+            <div className="flex items-center gap-3">
+              <RefreshCcw size={18} />
+              <span>Easy Returns</span>
+            </div>
 
-            <table className="w-full border">
-
-              <thead>
-
-                <tr className="bg-gray-100">
-
-                  <th className="p-2 border">
-                    Size
-                  </th>
-
-                  <th className="p-2 border">
-                    Chest
-                  </th>
-
-                  <th className="p-2 border">
-                    Waist
-                  </th>
-
-                </tr>
-
-              </thead>
-
-              <tbody>
-
-                <tr>
-                  <td className="p-2 border">
-                    S
-                  </td>
-                  <td className="p-2 border">
-                    36-38
-                  </td>
-                  <td className="p-2 border">
-                    30-32
-                  </td>
-                </tr>
-
-                <tr>
-                  <td className="p-2 border">
-                    M
-                  </td>
-                  <td className="p-2 border">
-                    38-40
-                  </td>
-                  <td className="p-2 border">
-                    32-34
-                  </td>
-                </tr>
-
-                <tr>
-                  <td className="p-2 border">
-                    L
-                  </td>
-                  <td className="p-2 border">
-                    40-42
-                  </td>
-                  <td className="p-2 border">
-                    34-36
-                  </td>
-                </tr>
-
-                <tr>
-                  <td className="p-2 border">
-                    XL
-                  </td>
-                  <td className="p-2 border">
-                    42-44
-                  </td>
-                  <td className="p-2 border">
-                    36-38
-                  </td>
-                </tr>
-
-              </tbody>
-
-            </table>
+            <div className="flex items-center gap-3">
+              <ShieldCheck size={18} />
+              <span>Authentic Product</span>
+            </div>
 
           </div>
 
         </div>
 
-      )}
+      </div>
+
+    </main>
 
 
-    </div>
+    <RecommendedProducts productId={productId} />
+    <AlsoBought productId={productId} />
 
-  );
+  </div>
+);
 
 };
 

@@ -1,5 +1,8 @@
 const Product = require("../models/Product");
 
+/* ===============================
+   CREATE PRODUCT
+   =============================== */
 exports.createProduct = async (req, res) => {
   try {
     const {
@@ -14,12 +17,13 @@ exports.createProduct = async (req, res) => {
     const parsedSizes =
       typeof sizes === "string" ? JSON.parse(sizes) : sizes;
 
-    const imageUrls = req.file
-      ? [`/uploads/${req.file.filename}`]
+    // ✅ MULTIPLE IMAGE SUPPORT
+    const imageUrls = req.files && req.files.length > 0
+      ? req.files.map(file => `/uploads/${file.filename}`)
       : [];
 
     const newProduct = new Product({
-      vendor: req.user._id,      // ✅ REQUIRED
+      vendor: req.user._id,
       name,
       description,
       price,
@@ -27,7 +31,7 @@ exports.createProduct = async (req, res) => {
       subCategory,
       sizes: parsedSizes,
       image: imageUrls,
-      isApproved: false,         // ✅ admin approval required
+      isApproved: false,
       isActive: true,
     });
 
@@ -38,6 +42,7 @@ exports.createProduct = async (req, res) => {
       message: "Product added. Awaiting admin approval.",
       product: newProduct,
     });
+
   } catch (err) {
     console.error("Create Product Error:", err);
     res.status(500).json({
@@ -46,6 +51,11 @@ exports.createProduct = async (req, res) => {
     });
   }
 };
+
+
+/* ===============================
+   GET ALL PRODUCTS
+   =============================== */
 exports.getProducts = async (req, res) => {
   try {
     const products = await Product.find({
@@ -62,6 +72,7 @@ exports.getProducts = async (req, res) => {
 
     const updatedProducts = products.map((product) => {
       const originalPrice = product.price;
+
       const finalPrice =
         discountPercent > 0
           ? originalPrice -
@@ -80,6 +91,7 @@ exports.getProducts = async (req, res) => {
       success: true,
       products: updatedProducts,
     });
+
   } catch (err) {
     console.error("Get Products Error:", err);
     res.status(500).json({
@@ -90,6 +102,9 @@ exports.getProducts = async (req, res) => {
 };
 
 
+/* ===============================
+   GET PRODUCT BY ID
+   =============================== */
 exports.getProductById = async (req, res) => {
   try {
     const product = await Product.findOne({
@@ -105,6 +120,7 @@ exports.getProductById = async (req, res) => {
       });
     }
 
+    // ✅ MULTIPLE IMAGES FULL URL
     const images = product.image.map(
       (img) => `${req.protocol}://${req.get("host")}${img}`
     );
@@ -117,6 +133,7 @@ exports.getProductById = async (req, res) => {
     const discountPercent = activeMembership?.discountPercent || 0;
 
     const originalPrice = product.price;
+
     const finalPrice =
       discountPercent > 0
         ? originalPrice -
@@ -131,6 +148,7 @@ exports.getProductById = async (req, res) => {
       finalPrice,
       membershipDiscount: discountPercent,
     });
+
   } catch (err) {
     console.error("Get Product By ID Error:", err);
     res.status(500).json({
@@ -139,8 +157,6 @@ exports.getProductById = async (req, res) => {
     });
   }
 };
-
-
 
 /* ===============================
    UPDATE PRODUCT
@@ -156,25 +172,55 @@ exports.updateProduct = async (req, res) => {
       });
     }
 
-    // Basic fields
-    if (req.body.name) product.name = req.body.name;
-    if (req.body.description) product.description = req.body.description;
-    if (req.body.category) product.category = req.body.category;
-    if (req.body.subCategory) product.subCategory = req.body.subCategory;
-    if (req.body.price) product.price = Number(req.body.price);
+    /* ================= BASIC FIELDS ================= */
 
-    // Size-wise stock update
-    if (req.body.sizes) {
+    if (req.body.name !== undefined) product.name = req.body.name;
+    if (req.body.description !== undefined) product.description = req.body.description;
+    if (req.body.category !== undefined) product.category = req.body.category;
+    if (req.body.subCategory !== undefined) product.subCategory = req.body.subCategory;
+    if (req.body.price !== undefined) product.price = Number(req.body.price);
+
+    /* ================= SIZES ================= */
+
+    if (req.body.sizes !== undefined) {
       product.sizes =
         typeof req.body.sizes === "string"
           ? JSON.parse(req.body.sizes)
           : req.body.sizes;
     }
 
-    // Image update
-    if (req.file) {
-      product.image = [`/uploads/${req.file.filename}`];
+    /* ================= IMAGE UPDATE ================= */
+
+    // Step 1: Get existing images from frontend
+    let existingImages = [];
+
+    if (req.body.existingImages) {
+      existingImages =
+        typeof req.body.existingImages === "string"
+          ? JSON.parse(req.body.existingImages)
+          : req.body.existingImages;
+    } else {
+      // If frontend didn't send, keep old images
+      existingImages = product.image || [];
     }
+
+    // Step 2: Get new uploaded images
+    let newImages = [];
+
+    if (req.files && req.files.length > 0) {
+      newImages = req.files.map(file => `/uploads/${file.filename}`);
+    }
+
+    // Step 3: Merge both
+    let finalImages = [...existingImages, ...newImages];
+
+    // Step 4: Limit to max 5 images
+    finalImages = finalImages.slice(0, 5);
+
+    // Step 5: Update product images
+    product.image = finalImages;
+
+    /* ================= SAVE ================= */
 
     await product.save();
 
@@ -183,21 +229,26 @@ exports.updateProduct = async (req, res) => {
       message: "Product updated successfully",
       product,
     });
+
   } catch (err) {
+
     console.error("Update Product Error:", err);
+
     res.status(500).json({
       success: false,
       message: "Server error",
       error: err.message,
     });
+
   }
 };
 
 /* ===============================
-   DELETE PRODUCT (OPTIONAL BUT USEFUL)
+   DELETE PRODUCT
    =============================== */
 exports.deleteProduct = async (req, res) => {
   try {
+
     const product = await Product.findById(req.params.id);
 
     if (!product) {
@@ -213,6 +264,7 @@ exports.deleteProduct = async (req, res) => {
       success: true,
       message: "Product deleted successfully",
     });
+
   } catch (err) {
     console.error("Delete Product Error:", err);
     res.status(500).json({

@@ -1,12 +1,12 @@
-// middlewares/authMiddleware.js
 const jwt = require("jsonwebtoken");
 const User = require("../models/Registration");
 
-/* ================= AUTH PROTECT ================= */
+/* ================= OPTIONAL AUTH ================= */
+/* Works for both logged-in users and guests */
+
 const protect = async (req, res, next) => {
   let token;
 
-  // Check Bearer token
   if (
     req.headers.authorization &&
     req.headers.authorization.startsWith("Bearer ")
@@ -14,53 +14,47 @@ const protect = async (req, res, next) => {
     try {
       token = req.headers.authorization.split(" ")[1];
 
-      // Verify token
       const decoded = jwt.verify(token, process.env.JWT_SECRET);
 
-      // Attach user to request
-      req.user = await User.findById(decoded.id).select("-password");
+      const user = await User.findById(decoded.id).select("-password");
 
-      if (!req.user) {
-        return res
-          .status(401)
-          .json({ success: false, message: "User not found" });
+      if (user) {
+        req.user = user;
       }
 
-      return next();
     } catch (error) {
-      console.error("JWT Error:", error);
-      return res
-        .status(401)
-        .json({ success: false, message: "Token invalid or expired" });
+      console.error("JWT Error:", error.message);
     }
   }
 
-  // No token
-  return res
-    .status(401)
-    .json({ success: false, message: "No token provided" });
+  // Continue even if no token (guest user)
+  next();
 };
 
 /* ================= ADMIN ONLY ================= */
+
 const adminOnly = (req, res, next) => {
   if (req.user && req.user.role === "admin") {
     return next();
   }
 
-  return res
-    .status(403)
-    .json({ success: false, message: "Access denied. Admins only." });
+  return res.status(403).json({
+    success: false,
+    message: "Access denied. Admins only."
+  });
 };
 
 /* ================= VENDOR ONLY ================= */
+
 const vendorOnly = (req, res, next) => {
   if (req.user && req.user.role === "seller") {
     return next();
   }
 
-  return res
-    .status(403)
-    .json({ success: false, message: "Access denied. Vendors only." });
+  return res.status(403).json({
+    success: false,
+    message: "Access denied. Vendors only."
+  });
 };
 
 module.exports = { protect, adminOnly, vendorOnly };
