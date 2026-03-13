@@ -4,6 +4,7 @@ const router = express.Router();
 const {
   createReturn,
   getUserReturns,
+  scheduleExchange,
 } = require("../controller/ReturnController");
 
 const {
@@ -95,6 +96,13 @@ router.put(
   protect,
   adminOnly,
   markReceived
+);
+
+router.put(
+  "/admin/:id/exchange-schedule",
+  protect,
+  adminOnly,
+  scheduleExchange
 );
 
 

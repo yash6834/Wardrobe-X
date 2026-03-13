@@ -88,7 +88,7 @@ const LatestCollection = () => {
   };
 
   return (
- <section className="py-24 px-6 lg:px-16 bg-[#FDFDFD]">
+ <section className="py-24 px-6 md:px-16 bg-[#FDFDFD]">
 
       {/* Heading */}
       <div className="max-w-4xl mx-auto text-center mb-20">
@@ -124,7 +124,7 @@ const LatestCollection = () => {
             >
 
               {/* Image */}
-              <div className="relative aspect-[4/5] mb-5 overflow-hidden bg-gray-100 rounded-sm">
+              <div className="relative aspect-[3/3] mb-5 overflow-hidden bg-gray-100 rounded-xl">
                 <img
                   src={
                     productImage[0]

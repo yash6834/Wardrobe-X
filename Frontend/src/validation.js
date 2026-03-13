@@ -80,25 +80,45 @@ export const validateUserForm = (formData) => {
 // Login Validation
 // =======================
 export function Login(formData) {
+
   const errors = {};
   const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
-  if (!formData.email) {
+  /* EMAIL VALIDATION */
+
+  if (!formData.email || formData.email.trim() === "") {
+
     errors.email = "Email is required";
+
   } else if (!emailRegex.test(formData.email)) {
-    errors.email = "Invalid email format";
+
+    errors.email = "Enter a valid email address";
+
   }
 
-  if (!formData.password) {
+
+  /* PASSWORD VALIDATION */
+
+  if (!formData.password || formData.password.trim() === "") {
+
     errors.password = "Password is required";
+
   } else if (formData.password.length < 6) {
+
     errors.password = "Password must be at least 6 characters";
+
+  } else if (formData.password.length > 50) {
+
+    errors.password = "Password is too long";
+
   }
+
 
   return {
     isValid: Object.keys(errors).length === 0,
     errors,
   };
+
 }
 
 // =======================

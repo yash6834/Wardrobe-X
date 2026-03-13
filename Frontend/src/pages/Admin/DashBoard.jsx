@@ -2,21 +2,24 @@ import React, { useEffect, useState } from "react";
 import api from "../../api/api";
 import {
   Users,
-  ShoppingBag,
+  ShoppingCart,
   Package,
   Clock,
-  ArrowUpRight,
-  AlertCircle,
+  IndianRupee,
   TrendingUp,
+  AlertTriangle,
 } from "lucide-react";
+
 import {
+  ResponsiveContainer,
   LineChart,
   Line,
   XAxis,
   YAxis,
-  CartesianGrid,
   Tooltip,
-  ResponsiveContainer,
+  CartesianGrid,
+  AreaChart,
+  Area,
   BarChart,
   Bar,
 } from "recharts";
@@ -30,7 +33,7 @@ const DashBoard = () => {
   useEffect(() => {
     const loadDashboard = async () => {
       try {
-        const [statsRes, ordersDateRes, monthlyRes, pendingProductsRes] =
+        const [statsRes, ordersRes, monthlyRes, pendingRes] =
           await Promise.all([
             api.get("/api/admin/dashboard/stats"),
             api.get("/api/admin/dashboard/orders-by-date"),
@@ -39,138 +42,153 @@ const DashBoard = () => {
           ]);
 
         setStats(statsRes.data.stats);
-        setOrdersByDate(ordersDateRes.data);
+        setOrdersByDate(ordersRes.data);
         setMonthlySales(monthlyRes.data);
-        setPendingCount(pendingProductsRes.data.length);
+        setPendingCount(pendingRes.data.length);
       } catch (err) {
-        console.error("Dashboard error:", err);
+        console.log(err);
       }
     };
+
     loadDashboard();
   }, []);
 
   if (!stats) {
     return (
-      <div className="h-[60vh] flex items-center justify-center">
-        <div className="flex flex-col items-center gap-2">
-          <div className="w-8 h-8 border-4 border-zinc-900 border-t-transparent rounded-full animate-spin"></div>
-          <p className="text-zinc-500 font-medium tracking-tight">Syncing data...</p>
-        </div>
+      <div className="h-[70vh] flex items-center justify-center">
+        <div className="animate-spin w-10 h-10 border-4 border-black border-t-transparent rounded-full"></div>
       </div>
     );
   }
 
   return (
-    <div className="max-w-[1400px] mx-auto space-y-8 p-2 md:p-6">
+    <div className="p-6 space-y-8 max-w-[1500px] mx-auto">
+
       {/* HEADER */}
-      <div className="flex flex-col md:flex-row md:items-end justify-between gap-4">
+      <div className="flex justify-between items-center">
         <div>
-          <h1 className="text-4xl font-extrabold text-zinc-900 tracking-tight">
-            Overview
-          </h1>
-          <p className="text-zinc-500 mt-1 font-medium">
-            Real-time analytics and platform performance.
+          <h1 className="text-3xl font-bold">Admin Dashboard</h1>
+          <p className="text-zinc-500 text-sm">
+            Monitor store performance and activity
           </p>
         </div>
-        <div className="flex items-center gap-2 text-xs font-bold bg-zinc-100 text-zinc-600 px-3 py-1.5 rounded-full border border-zinc-200">
-          <div className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse" />
-          SYSTEM LIVE
+
+        <div className="flex items-center gap-2 text-xs font-semibold bg-green-100 text-green-700 px-3 py-1 rounded-full">
+          <div className="w-2 h-2 bg-green-500 rounded-full animate-pulse"></div>
+          LIVE DATA
         </div>
       </div>
 
-      {/* KPI CARDS */}
+      {/* STAT CARDS */}
+
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
-        <StatCard
-          title="Total Users"
-          value={stats.totalUsers}
+
+        <Card
           icon={<Users size={20} />}
-          trend="+12%"
+          title="Users"
+          value={stats.totalUsers}
+          color="bg-blue-50 text-blue-600"
         />
-        <StatCard
-          title="Total Orders"
+
+        <Card
+          icon={<ShoppingCart size={20} />}
+          title="Orders"
           value={stats.totalOrders}
-          icon={<ShoppingBag size={20} />}
-          trend="+5.4%"
+          color="bg-purple-50 text-purple-600"
         />
-        <StatCard
-          title="Total Products"
-          value={stats.totalProducts}
+
+        <Card
           icon={<Package size={20} />}
+          title="Products"
+          value={stats.totalProducts}
+          color="bg-orange-50 text-orange-600"
         />
-        <StatCard
-          title="Pending Approvals"
-          value={pendingCount}
+
+        <Card
           icon={<Clock size={20} />}
-          danger={pendingCount > 0}
+          title="Pending Products"
+          value={pendingCount}
+          color="bg-amber-50 text-amber-600"
         />
+
+        
+
       </div>
 
       {/* CHARTS */}
-      <div className="grid grid-cols-1 lg:grid-cols-5 gap-6">
-        {/* Orders by Date (60% width) */}
-        <div className="lg:col-span-3">
-          <ChartCard title="Order Velocity" subtitle="Daily transaction volume">
-            <ResponsiveContainer width="100%" height={320}>
-              <LineChart data={ordersByDate} margin={{ top: 10, right: 10, left: -20, bottom: 0 }}>
-                <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#f0f0f0" />
-                <XAxis dataKey="date" axisLine={false} tickLine={false} tick={{ fontSize: 12, fill: '#94a3b8' }} dy={10} />
-                <YAxis axisLine={false} tickLine={false} tick={{ fontSize: 12, fill: '#94a3b8' }} />
-                <Tooltip 
-                  contentStyle={{ borderRadius: '12px', border: 'none', boxShadow: '0 10px 15px -3px rgba(0,0,0,0.1)' }} 
-                />
-                <Line
-                  type="monotone"
-                  dataKey="count"
-                  stroke="#0f172a"
-                  strokeWidth={4}
-                  dot={{ r: 4, fill: "#0f172a", strokeWidth: 2, stroke: "#fff" }}
-                  activeDot={{ r: 6, shadow: '0 0 10px rgba(0,0,0,0.2)' }}
-                />
-              </LineChart>
-            </ResponsiveContainer>
-          </ChartCard>
-        </div>
 
-        {/* Monthly Sales (40% width) */}
-        <div className="lg:col-span-2">
-          <ChartCard title="Revenue Growth" subtitle="Monthly performance metrics">
-            <ResponsiveContainer width="100%" height={320}>
-              <BarChart data={monthlySales} margin={{ top: 10, right: 10, left: -20, bottom: 0 }}>
-                <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#f0f0f0" />
-                <XAxis dataKey="month" axisLine={false} tickLine={false} tick={{ fontSize: 12, fill: '#94a3b8' }} dy={10} />
-                <YAxis axisLine={false} tickLine={false} tick={{ fontSize: 12, fill: '#94a3b8' }} />
-                <Tooltip cursor={{fill: '#f8fafc'}} contentStyle={{ borderRadius: '12px', border: 'none', boxShadow: '0 10px 15px -3px rgba(0,0,0,0.1)' }} />
-                <Bar
-                  dataKey="total"
-                  fill="#6366f1"
-                  radius={[6, 6, 6, 6]}
-                  barSize={30}
-                />
-              </BarChart>
-            </ResponsiveContainer>
-          </ChartCard>
-        </div>
+      <div className="grid lg:grid-cols-2 gap-6">
+
+        {/* ORDERS TREND */}
+
+        <ChartCard
+          title="Orders Trend"
+          subtitle="Daily orders activity"
+        >
+          <ResponsiveContainer width="100%" height={300}>
+            <AreaChart data={ordersByDate}>
+              <CartesianGrid strokeDasharray="3 3" />
+              <XAxis dataKey="date" />
+              <YAxis />
+              <Tooltip />
+              <Area
+                type="monotone"
+                dataKey="count"
+                stroke="#6366f1"
+                fill="#6366f130"
+                strokeWidth={3}
+              />
+            </AreaChart>
+          </ResponsiveContainer>
+        </ChartCard>
+
+        {/* SALES */}
+
+        <ChartCard
+          title="Monthly Revenue"
+          subtitle="Revenue generated per month"
+        >
+          <ResponsiveContainer width="100%" height={300}>
+            <BarChart data={monthlySales}>
+              <CartesianGrid strokeDasharray="3 3" />
+              <XAxis dataKey="month" />
+              <YAxis />
+              <Tooltip />
+              <Bar
+                dataKey="total"
+                fill="#22c55e"
+                radius={[8, 8, 0, 0]}
+              />
+            </BarChart>
+          </ResponsiveContainer>
+        </ChartCard>
+
       </div>
 
-      {/* ALERTS SECTION */}
+      {/* ALERT */}
+
       {pendingCount > 0 && (
-        <div className="bg-white border-2 border-amber-100 rounded-[2rem] p-6 flex items-center justify-between shadow-sm">
-          <div className="flex items-center gap-4">
-            <div className="w-12 h-12 rounded-2xl bg-amber-50 flex items-center justify-center text-amber-600">
-              <AlertCircle size={24} />
-            </div>
+        <div className="bg-amber-50 border border-amber-200 rounded-xl p-5 flex justify-between items-center">
+          <div className="flex items-center gap-3">
+
+            <AlertTriangle className="text-amber-600" />
+
             <div>
-              <h3 className="font-bold text-zinc-900 text-lg">Action Required</h3>
-              <p className="text-zinc-500 text-sm">
-                There are <span className="font-bold text-amber-600">{pendingCount} products</span> awaiting your review.
+              <h4 className="font-semibold">
+                {pendingCount} Products Waiting Approval
+              </h4>
+
+              <p className="text-sm text-zinc-500">
+                Review seller products before they appear in the store
               </p>
             </div>
           </div>
-          <button 
-            onClick={() => window.location.href='/admin/pending'}
-            className="px-6 py-2.5 bg-zinc-900 text-white text-sm font-bold rounded-xl hover:bg-zinc-800 transition-all shadow-lg shadow-zinc-200"
+
+          <button
+            onClick={() => (window.location.href = "/admin/pending")}
+            className="bg-black text-white px-4 py-2 rounded-lg text-sm"
           >
-            Review Now
+            Review
           </button>
         </div>
       )}
@@ -178,37 +196,31 @@ const DashBoard = () => {
   );
 };
 
-/* ================= REFINED COMPONENTS ================= */
+const Card = ({ icon, title, value, color }) => (
+  <div className="bg-white border rounded-xl p-5 flex justify-between items-center shadow-sm hover:shadow-md transition">
 
-const StatCard = ({ title, value, icon, danger, trend }) => (
-  <div className={`relative overflow-hidden bg-white border border-zinc-100 rounded-[2rem] p-6 shadow-sm transition-all hover:shadow-md`}>
-    <div className="flex justify-between items-start mb-4">
-      <div className={`p-3 rounded-2xl ${danger ? "bg-rose-50 text-rose-600" : "bg-zinc-50 text-zinc-900"}`}>
-        {icon}
-      </div>
-      {trend && (
-        <div className="flex items-center gap-1 text-emerald-600 font-bold text-xs bg-emerald-50 px-2 py-1 rounded-lg">
-          <ArrowUpRight size={12} />
-          {trend}
-        </div>
-      )}
-    </div>
     <div>
-      <p className="text-xs font-bold text-zinc-400 uppercase tracking-widest">{title}</p>
-      <p className="text-3xl font-black text-zinc-900 mt-1 tracking-tight">
-        {typeof value === 'number' ? value.toLocaleString() : value}
-      </p>
+      <p className="text-sm text-zinc-500">{title}</p>
+      <h2 className="text-2xl font-bold mt-1">{value}</h2>
     </div>
+
+    <div className={`p-3 rounded-lg ${color}`}>
+      {icon}
+    </div>
+
   </div>
 );
 
 const ChartCard = ({ title, subtitle, children }) => (
-  <div className="bg-white border border-zinc-100 rounded-[2.5rem] p-8 shadow-sm h-full">
-    <div className="mb-8">
-      <h3 className="text-xl font-bold text-zinc-900 tracking-tight">{title}</h3>
-      <p className="text-sm text-zinc-400 font-medium">{subtitle}</p>
+  <div className="bg-white border rounded-xl p-6 shadow-sm">
+
+    <div className="mb-4">
+      <h3 className="font-semibold text-lg">{title}</h3>
+      <p className="text-sm text-zinc-500">{subtitle}</p>
     </div>
+
     {children}
+
   </div>
 );
 

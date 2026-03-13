@@ -1,5 +1,6 @@
-import React, { useEffect, useState, useContext } from "react";
+import React, { useEffect, useState, useContext, useRef } from "react";
 import { useNavigate, useParams } from "react-router-dom";
+
 import api from "../../api/api";
 import { ShopContext } from "../../context/ShopContext";
 import { CurrencyContext } from "../../context/Currency";
@@ -19,6 +20,7 @@ const Product = () => {
 
   const navigate = useNavigate();
   const { productId } = useParams();
+  const hasTracked = useRef(false);
 
   const [productData, setProductData] = useState(null);
   const [user, setUser] = useState(null);
@@ -62,6 +64,36 @@ const Product = () => {
     fetchProduct();
 
   }, [productId]);
+
+  /* ================= TRACK PRODUCT VIEW ================= */
+
+useEffect(() => {
+
+  if (hasTracked.current) return;
+
+  const trackView = async () => {
+
+    const token = localStorage.getItem("token");
+    if (!token) return;
+
+    try {
+
+      await api.post("/api/activity/track", {
+        productId: productId,
+        action: "view"
+      });
+
+      hasTracked.current = true;
+
+    } catch (err) {
+      console.log("Tracking failed");
+    }
+
+  };
+
+  trackView();
+
+}, []);
 
 
   /* ================= FETCH USER ================= */
@@ -126,7 +158,9 @@ const Product = () => {
   if (!productData) {
     return (
       <div className="h-screen flex items-center justify-center bg-white">
-        <div className="w-8 h-8 border-2 border-gray-200 border-t-black rounded-full animate-spin"></div>
+        <div className="w-8 h-8 border-2 border-gray-200 border-t-black rounded-full animate-spin">
+        
+        </div>
       </div>
     );
   }

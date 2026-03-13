@@ -188,7 +188,7 @@ const Collection = () => {
 
             <div className="bg-gray-50 rounded-lg p-5">
 
-              <p className="mb-4 text-xs font-bold uppercase">Collections</p>
+              <p className="mb-4 text-xs font-bold uppercase">Category</p>
 
               {["Men", "Women"].map((cat) => (
                 <label key={cat} className="flex items-center mb-2">
@@ -209,7 +209,7 @@ const Collection = () => {
 
             <div className="bg-gray-50 rounded-lg p-5">
 
-              <p className="mb-4 text-xs font-bold uppercase">Category</p>
+              <p className="mb-4 text-xs font-bold uppercase">Sub-Category</p>
 
               {["Topwear", "Bottomwear"].map((sub) => (
                 <label key={sub} className="flex items-center mb-2">

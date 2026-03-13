@@ -176,10 +176,13 @@ exports.schedulePickup = async (req, res) => {
 
     rma.pickupDate = pickupDate;
     rma.pickupScheduled = true;
+
+    rma.adminStatus = "approved"; // ⭐ FIX
     rma.status = "pickup_scheduled";
+
     rma.timeline.push({
       status: "pickup_scheduled",
-      message: "Pickup scheduled"
+      message: "Pickup scheduled by admin",
     });
 
     await rma.save();
@@ -290,3 +293,44 @@ exports.vendorReviewReturn = async (req, res) => {
   res.json(rma);
 };
 
+/* ================= SCHEDULE EXCHANGE ================= */
+/* ================= SCHEDULE EXCHANGE ================= */
+exports.scheduleExchange = async (req, res) => {
+  try {
+    const rma = await Return.findById(req.params.id);
+
+    if (!rma) {
+      return res.status(404).json({ message: "Return not found" });
+    }
+
+    if (rma.type !== "exchange") {
+      return res.status(400).json({ message: "Not an exchange request" });
+    }
+
+    if (rma.status !== "received") {
+      return res.status(400).json({
+        message: "Exchange can only start after item is received",
+      });
+    }
+
+    rma.adminStatus = "approved"; // ⭐ FIX
+    rma.status = "exchange_scheduled";
+
+    rma.timeline.push({
+      status: "exchange_scheduled",
+      message: "Replacement product scheduled for dispatch",
+    });
+
+    await rma.save();
+
+    res.json({
+      message: "Exchange scheduled successfully",
+      data: rma,
+    });
+  } catch (error) {
+    console.error("Schedule Exchange Error:", error);
+    res.status(500).json({
+      message: "Failed to schedule exchange",
+    });
+  }
+};
