@@ -11,5 +11,66 @@
   "close": "Close",
   "welcome": "Welcome",
   "add_to_cart": "Add to Cart",
-  "checkout": "Checkout"
+  "checkout": "Checkout",
+
+  "filters": "Filters",
+  "category": "Category",
+  "subcategory": "Sub-Category",
+  "men": "Men",
+  "women": "Women",
+  "topwear": "Topwear",
+  "bottomwear": "Bottomwear",
+  "search": "Search products...",
+  "relevant": "Relevant",
+  "lowHigh": "Price: Low to High",
+  "highLow": "Price: High to Low",
+  "shop": "Shop",
+
+  
+  "select_size": "Select size",
+  "out_of_stock": "Out of stock",
+  "login_first": "Login first",
+  "added_to_bag": "Added to bag",
+  "failed": "Failed",
+  "express_shipping": "Express Shipping",
+  "easy_returns": "Easy Returns",
+  "authentic_product": "Authentic Product",
+
+  "about_story": "The Story",
+  "about_title_1": "Redefining",
+  "about_title_2": "modern",
+  "about_title_3": "elegance",
+  "about_description": "Wardrobe X isn't just about selling clothes. It’s an exploration of form, fabric, and the subtle art of dressing well.",
+  "explore_collection": "Explore Collection",
+  "established": "Est. 2024",
+
+  "core_philosophy": "The Core Philosophy",
+  "core_subtitle": "No compromises. Just intentional design.",
+
+  "vision": "The Vision",
+  "vision_desc": "Redefining streetwear with luxury textures and minimalist silhouettes.",
+
+  "quality": "Quality",
+  "quality_desc": "Every garment is tested for durability, fit, and comfort.",
+
+  "ethics": "Ethics",
+  "ethics_desc": "We believe in sustainable fashion and ethical sourcing.",
+
+  "fashion_quote": "Fashion is the most powerful art there is. It's movement, design, and architecture all in one.",
+
+  
+  "get_in": "GET IN",
+  "touch": "TOUCH",
+  "contact_description": "Have a question or just want to say hi? Our team is ready to assist you with your fashion journey.",
+
+  "flagship_store": "Our Flagship Store",
+  "office_location": "Valsad Office",
+
+  "address_line1": "Shop No. 8, Shreeji Complex",
+  "address_line2": "Near Tithal Road",
+  "address_line3": "Valsad – 396001, Gujarat, India",
+
+  "support_line": "Support Line",
+  "inquiries": "Inquiries"
+
 }

@@ -5,15 +5,14 @@ import {
   ShoppingCart,
   Package,
   Clock,
-  IndianRupee,
+  IndianRupee, // Available if you want to add a Revenue card later
   TrendingUp,
   AlertTriangle,
+  ArrowRight,
 } from "lucide-react";
 
 import {
   ResponsiveContainer,
-  LineChart,
-  Line,
   XAxis,
   YAxis,
   Tooltip,
@@ -33,13 +32,12 @@ const DashBoard = () => {
   useEffect(() => {
     const loadDashboard = async () => {
       try {
-        const [statsRes, ordersRes, monthlyRes, pendingRes] =
-          await Promise.all([
-            api.get("/api/admin/dashboard/stats"),
-            api.get("/api/admin/dashboard/orders-by-date"),
-            api.get("/api/admin/dashboard/monthly-sales"),
-            api.get("/api/admin/products/pending"),
-          ]);
+        const [statsRes, ordersRes, monthlyRes, pendingRes] = await Promise.all([
+          api.get("/api/admin/dashboard/stats"),
+          api.get("/api/admin/dashboard/orders-by-date"),
+          api.get("/api/admin/dashboard/monthly-sales"),
+          api.get("/api/admin/products/pending"),
+        ]);
 
         setStats(statsRes.data.stats);
         setOrdersByDate(ordersRes.data);
@@ -53,174 +51,203 @@ const DashBoard = () => {
     loadDashboard();
   }, []);
 
+  // SKELETON LOADER
   if (!stats) {
     return (
-      <div className="h-[70vh] flex items-center justify-center">
-        <div className="animate-spin w-10 h-10 border-4 border-black border-t-transparent rounded-full"></div>
+      <div className="p-6 md:p-8 space-y-8 max-w-[1500px] mx-auto min-h-screen bg-slate-50/50">
+        <div className="h-10 w-48 bg-slate-200 rounded-lg animate-pulse mb-8"></div>
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
+          {[1, 2, 3, 4].map((i) => (
+            <div key={i} className="h-32 bg-slate-200 rounded-2xl animate-pulse"></div>
+          ))}
+        </div>
+        <div className="grid lg:grid-cols-2 gap-6">
+          <div className="h-[400px] bg-slate-200 rounded-2xl animate-pulse"></div>
+          <div className="h-[400px] bg-slate-200 rounded-2xl animate-pulse"></div>
+        </div>
       </div>
     );
   }
 
   return (
-    <div className="p-6 space-y-8 max-w-[1500px] mx-auto">
-
-      {/* HEADER */}
-      <div className="flex justify-between items-center">
-        <div>
-          <h1 className="text-3xl font-bold">Admin Dashboard</h1>
-          <p className="text-zinc-500 text-sm">
-            Monitor store performance and activity
-          </p>
-        </div>
-
-        <div className="flex items-center gap-2 text-xs font-semibold bg-green-100 text-green-700 px-3 py-1 rounded-full">
-          <div className="w-2 h-2 bg-green-500 rounded-full animate-pulse"></div>
-          LIVE DATA
-        </div>
-      </div>
-
-      {/* STAT CARDS */}
-
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
-
-        <Card
-          icon={<Users size={20} />}
-          title="Users"
-          value={stats.totalUsers}
-          color="bg-blue-50 text-blue-600"
-        />
-
-        <Card
-          icon={<ShoppingCart size={20} />}
-          title="Orders"
-          value={stats.totalOrders}
-          color="bg-purple-50 text-purple-600"
-        />
-
-        <Card
-          icon={<Package size={20} />}
-          title="Products"
-          value={stats.totalProducts}
-          color="bg-orange-50 text-orange-600"
-        />
-
-        <Card
-          icon={<Clock size={20} />}
-          title="Pending Products"
-          value={pendingCount}
-          color="bg-amber-50 text-amber-600"
-        />
-
+    <div className="min-h-screen bg-slate-50/50 p-6 md:p-8">
+      <div className="max-w-[1500px] mx-auto space-y-8">
         
-
-      </div>
-
-      {/* CHARTS */}
-
-      <div className="grid lg:grid-cols-2 gap-6">
-
-        {/* ORDERS TREND */}
-
-        <ChartCard
-          title="Orders Trend"
-          subtitle="Daily orders activity"
-        >
-          <ResponsiveContainer width="100%" height={300}>
-            <AreaChart data={ordersByDate}>
-              <CartesianGrid strokeDasharray="3 3" />
-              <XAxis dataKey="date" />
-              <YAxis />
-              <Tooltip />
-              <Area
-                type="monotone"
-                dataKey="count"
-                stroke="#6366f1"
-                fill="#6366f130"
-                strokeWidth={3}
-              />
-            </AreaChart>
-          </ResponsiveContainer>
-        </ChartCard>
-
-        {/* SALES */}
-
-        <ChartCard
-          title="Monthly Revenue"
-          subtitle="Revenue generated per month"
-        >
-          <ResponsiveContainer width="100%" height={300}>
-            <BarChart data={monthlySales}>
-              <CartesianGrid strokeDasharray="3 3" />
-              <XAxis dataKey="month" />
-              <YAxis />
-              <Tooltip />
-              <Bar
-                dataKey="total"
-                fill="#22c55e"
-                radius={[8, 8, 0, 0]}
-              />
-            </BarChart>
-          </ResponsiveContainer>
-        </ChartCard>
-
-      </div>
-
-      {/* ALERT */}
-
-      {pendingCount > 0 && (
-        <div className="bg-amber-50 border border-amber-200 rounded-xl p-5 flex justify-between items-center">
-          <div className="flex items-center gap-3">
-
-            <AlertTriangle className="text-amber-600" />
-
-            <div>
-              <h4 className="font-semibold">
-                {pendingCount} Products Waiting Approval
-              </h4>
-
-              <p className="text-sm text-zinc-500">
-                Review seller products before they appear in the store
-              </p>
-            </div>
+        {/* HEADER */}
+        <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
+          <div>
+            <h1 className="text-3xl font-extrabold text-slate-900 tracking-tight">
+              Dashboard Overview
+            </h1>
+            <p className="text-slate-500 mt-1">
+              Monitor your store's performance and pending actions.
+            </p>
           </div>
 
-          <button
-            onClick={() => (window.location.href = "/admin/pending")}
-            className="bg-black text-white px-4 py-2 rounded-lg text-sm"
-          >
-            Review
-          </button>
+          <div className="flex items-center gap-2 text-xs font-bold bg-emerald-100 text-emerald-700 px-4 py-2 rounded-full shadow-sm border border-emerald-200">
+            <span className="relative flex h-2.5 w-2.5">
+              <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
+              <span className="relative inline-flex rounded-full h-2.5 w-2.5 bg-emerald-500"></span>
+            </span>
+            LIVE DATA
+          </div>
         </div>
-      )}
+
+        {/* STAT CARDS */}
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
+          <Card
+            icon={<Users size={24} strokeWidth={2.5} />}
+            title="Total Users"
+            value={stats.totalUsers}
+            bgColor="bg-blue-100"
+            iconColor="text-blue-600"
+          />
+
+          <Card
+            icon={<ShoppingCart size={24} strokeWidth={2.5} />}
+            title="Total Orders"
+            value={stats.totalOrders}
+            bgColor="bg-purple-100"
+            iconColor="text-purple-600"
+          />
+
+          <Card
+            icon={<Package size={24} strokeWidth={2.5} />}
+            title="Active Products"
+            value={stats.totalProducts}
+            bgColor="bg-orange-100"
+            iconColor="text-orange-600"
+          />
+
+          <Card
+            icon={<Clock size={24} strokeWidth={2.5} />}
+            title="Pending Review"
+            value={pendingCount}
+            bgColor="bg-rose-100"
+            iconColor="text-rose-600"
+          />
+        </div>
+
+        {/* ACTION ALERT - Moved up for better visibility */}
+        {pendingCount > 0 && (
+          <div className="bg-gradient-to-r from-amber-50 to-orange-50 border border-amber-200 rounded-2xl p-6 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 shadow-sm">
+            <div className="flex items-center gap-4">
+              <div className="bg-amber-100 p-3 rounded-full">
+                <AlertTriangle className="text-amber-600" size={24} />
+              </div>
+              <div>
+                <h4 className="font-bold text-amber-900 text-lg">
+                  {pendingCount} Products Awaiting Approval
+                </h4>
+                <p className="text-sm text-amber-700/80 mt-0.5">
+                  Review new seller submissions before they go live on the platform.
+                </p>
+              </div>
+            </div>
+
+            <button
+              onClick={() => (window.location.href = "/admin/pending")}
+              className="flex items-center gap-2 bg-amber-600 hover:bg-amber-700 text-white font-medium px-5 py-2.5 rounded-xl text-sm transition-colors shadow-sm whitespace-nowrap"
+            >
+              Review Now
+              <ArrowRight size={16} />
+            </button>
+          </div>
+        )}
+
+        {/* CHARTS */}
+        <div className="grid lg:grid-cols-2 gap-6">
+          
+          {/* ORDERS TREND */}
+          <ChartCard
+            title="Orders Trend"
+            subtitle="Daily activity over the last 30 days"
+            icon={<TrendingUp size={18} className="text-indigo-500" />}
+          >
+            <ResponsiveContainer width="100%" height={320}>
+              <AreaChart data={ordersByDate} margin={{ top: 10, right: 10, left: -20, bottom: 0 }}>
+                <defs>
+                  <linearGradient id="colorCount" x1="0" y1="0" x2="0" y2="1">
+                    <stop offset="5%" stopColor="#6366f1" stopOpacity={0.3} />
+                    <stop offset="95%" stopColor="#6366f1" stopOpacity={0} />
+                  </linearGradient>
+                </defs>
+                <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#e2e8f0" />
+                <XAxis dataKey="date" axisLine={false} tickLine={false} tick={{ fill: '#64748b', fontSize: 12 }} dy={10} />
+                <YAxis axisLine={false} tickLine={false} tick={{ fill: '#64748b', fontSize: 12 }} />
+                <Tooltip 
+                  contentStyle={{ borderRadius: '12px', border: 'none', boxShadow: '0 4px 6px -1px rgb(0 0 0 / 0.1)' }}
+                />
+                <Area
+                  type="monotone"
+                  dataKey="count"
+                  stroke="#6366f1"
+                  fillOpacity={1}
+                  fill="url(#colorCount)"
+                  strokeWidth={3}
+                />
+              </AreaChart>
+            </ResponsiveContainer>
+          </ChartCard>
+
+          {/* SALES */}
+          <ChartCard
+            title="Monthly Revenue"
+            subtitle="Total revenue generated per month"
+            icon={<IndianRupee size={18} className="text-emerald-500" />}
+          >
+            <ResponsiveContainer width="100%" height={320}>
+              <BarChart data={monthlySales} margin={{ top: 10, right: 10, left: -20, bottom: 0 }}>
+                <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#e2e8f0" />
+                <XAxis dataKey="month" axisLine={false} tickLine={false} tick={{ fill: '#64748b', fontSize: 12 }} dy={10} />
+                <YAxis axisLine={false} tickLine={false} tick={{ fill: '#64748b', fontSize: 12 }} />
+                <Tooltip 
+                  cursor={{ fill: '#f1f5f9' }}
+                  contentStyle={{ borderRadius: '12px', border: 'none', boxShadow: '0 4px 6px -1px rgb(0 0 0 / 0.1)' }}
+                />
+                <Bar
+                  dataKey="total"
+                  fill="#10b981"
+                  radius={[6, 6, 0, 0]}
+                  barSize={40}
+                />
+              </BarChart>
+            </ResponsiveContainer>
+          </ChartCard>
+
+        </div>
+      </div>
     </div>
   );
 };
 
-const Card = ({ icon, title, value, color }) => (
-  <div className="bg-white border rounded-xl p-5 flex justify-between items-center shadow-sm hover:shadow-md transition">
-
-    <div>
-      <p className="text-sm text-zinc-500">{title}</p>
-      <h2 className="text-2xl font-bold mt-1">{value}</h2>
+// Extracted UI Components
+const Card = ({ icon, title, value, bgColor, iconColor }) => (
+  <div className="bg-white border border-slate-100 rounded-2xl p-6 shadow-sm hover:shadow-md hover:-translate-y-1 transition-all duration-300">
+    <div className="flex justify-between items-start">
+      <div>
+        <p className="text-sm font-medium text-slate-500 mb-1">{title}</p>
+        <h2 className="text-3xl font-bold text-slate-800">{value}</h2>
+      </div>
+      <div className={`p-3 rounded-xl ${bgColor} ${iconColor}`}>
+        {icon}
+      </div>
     </div>
-
-    <div className={`p-3 rounded-lg ${color}`}>
-      {icon}
-    </div>
-
   </div>
 );
 
-const ChartCard = ({ title, subtitle, children }) => (
-  <div className="bg-white border rounded-xl p-6 shadow-sm">
-
-    <div className="mb-4">
-      <h3 className="font-semibold text-lg">{title}</h3>
-      <p className="text-sm text-zinc-500">{subtitle}</p>
+const ChartCard = ({ title, subtitle, icon, children }) => (
+  <div className="bg-white border border-slate-100 rounded-2xl p-6 shadow-sm">
+    <div className="mb-6 flex items-center gap-3">
+      <div className="p-2 bg-slate-50 rounded-lg border border-slate-100">
+        {icon}
+      </div>
+      <div>
+        <h3 className="font-bold text-slate-800 text-lg leading-tight">{title}</h3>
+        <p className="text-sm text-slate-500">{subtitle}</p>
+      </div>
     </div>
-
     {children}
-
   </div>
 );
 

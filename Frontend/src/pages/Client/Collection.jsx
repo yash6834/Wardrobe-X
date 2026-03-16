@@ -1,3 +1,4 @@
+import { useTranslation } from "react-i18next";
 import React, { useEffect, useState, useContext } from "react";
 import { Link } from "react-router-dom";
 import api from "../../api/api";
@@ -6,6 +7,8 @@ import { Search, ChevronDown, SlidersHorizontal } from "lucide-react";
 import { CurrencyContext } from "../../context/Currency";
 
 const Collection = () => {
+
+  const { t } = useTranslation();
 
   const [products, setProducts] = useState([]);
   const [filterProduct, setFilterProduct] = useState([]);
@@ -183,15 +186,13 @@ const Collection = () => {
 
             <div className="flex items-center gap-2 mb-6">
               <SlidersHorizontal size={18} />
-              <h3 className="text-sm font-semibold">Filters</h3>
-            </div>
+<h3 className="text-sm font-semibold">{t("filters")}</h3>            </div>
 
             <div className="bg-gray-50 rounded-lg p-5">
 
-              <p className="mb-4 text-xs font-bold uppercase">Category</p>
-
-              {["Men", "Women"].map((cat) => (
-                <label key={cat} className="flex items-center mb-2">
+<p className="mb-4 text-xs font-bold uppercase">{t("category")}</p>
+{["men", "women"].map((cat) => (
+                  <label key={cat} className="flex items-center mb-2">
 
                   <input
                     type="checkbox"
@@ -200,8 +201,7 @@ const Collection = () => {
                     className="accent-black"
                   />
 
-                  <span className="ml-3 text-sm">{cat}</span>
-
+<span className="ml-3 text-sm">{t(cat)}</span>
                 </label>
               ))}
 
@@ -209,10 +209,10 @@ const Collection = () => {
 
             <div className="bg-gray-50 rounded-lg p-5">
 
-              <p className="mb-4 text-xs font-bold uppercase">Sub-Category</p>
+              <p className="mb-4 text-xs font-bold uppercase">{t("subcategory")}</p>
 
-              {["Topwear", "Bottomwear"].map((sub) => (
-                <label key={sub} className="flex items-center mb-2">
+{["topwear", "bottomwear"].map((sub) => (
+                  <label key={sub} className="flex items-center mb-2">
 
                   <input
                     type="checkbox"
@@ -221,8 +221,7 @@ const Collection = () => {
                     className="accent-black"
                   />
 
-                  <span className="ml-3 text-sm">{sub}</span>
-
+<span className="ml-3 text-sm">{t(sub)}</span>
                 </label>
               ))}
 

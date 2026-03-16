@@ -65,7 +65,7 @@ const Footer = () => {
             <a href="#" className="hover:text-white transition-colors">Terms of Service</a>
           </div>
           <p className="text-gray-600 text-[10px] tracking-widest uppercase">
-            © {currentYear} — Mumbai, IN
+            © {currentYear} — Valsad, IN
           </p>
         </div>
       </div>

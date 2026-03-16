@@ -117,8 +117,23 @@ const Navbar = () => {
           </nav>
 
           {/* Right Icons */}
-          <div className="flex items-center gap-6">
+{/* Right Icons */}
+<div className="flex items-center gap-6">
 
+  {/* Language Switcher */}
+<select
+  value={i18n.language}
+  onChange={(e) => {
+    const lang = e.target.value;
+    i18n.changeLanguage(lang);
+    localStorage.setItem("language", lang);
+  }}
+  className="text-xs border border-gray-300 px-2 py-1 rounded-md bg-white"
+>
+  <option value="en">EN</option>
+  <option value="hi">HI</option>
+  <option value="gu">GU</option>
+</select>
             
 
             {/* Currency Switcher */}
