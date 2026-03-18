@@ -16,7 +16,7 @@ function UserRegis() {
 
   const [formData, setFormData] = useState(initialFormState);
   const [errors, setErrors] = useState({});
-  const [showPassword, setShowPassword] = useState(false); // 👈 State for eye toggle
+  const [showPassword, setShowPassword] = useState(false); 
   const navigate = useNavigate();
 
   const handleChange = (e) => {
@@ -26,7 +26,7 @@ function UserRegis() {
       ...prev,
       [name]: value,
       // clear brandName when switching to user
-      ...(name === "role" && value === "user" ? { brandName: "" } : {}),
+      ...(name === "role" && value === "user" ? { brandName: "" } : {}),   
     }));
   };
 

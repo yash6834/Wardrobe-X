@@ -23,6 +23,8 @@ api.interceptors.request.use(
   (error) => Promise.reject(error)
 );
 
+
+
 /* ================= AUTH APIS ================= */
 export const login = (data) => api.post("/api/users/login", data);
 export const register = (data) => api.post("/api/users/add", data);

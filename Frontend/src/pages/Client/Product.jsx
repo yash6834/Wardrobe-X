@@ -360,20 +360,38 @@ const Product = () => {
                 >
                   {s.size}
                 </button>
+                
 
               ))}
 
             </div>
 
+            {size && (
+  <p className="text-sm text-gray-500 mb-4">
+    {selectedSizeStock > 0
+      ? `${selectedSizeStock} items left`
+      : "Out of stock"}
+  </p>
+)}
+
 
             {/* ADD TO CART */}
 
-            <button
-              onClick={handleAddToCart}
-              className="w-full py-4 bg-black text-white font-bold"
-            >
-              {t("add_to_cart")}
-            </button>
+           <button
+  onClick={handleAddToCart}
+  disabled={size && selectedSizeStock === 0}
+  className={`w-full py-4 font-bold ${
+    size && selectedSizeStock === 0
+      ? "bg-gray-400 cursor-not-allowed"
+      : "bg-black text-white"
+  }`}
+>
+  {!size
+    ? "Select Size"
+    : selectedSizeStock === 0
+    ? "Out of stock"
+    : "Add to Cart"}
+</button>
 
 
             {/* BENEFITS */}

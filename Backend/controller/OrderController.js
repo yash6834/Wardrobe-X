@@ -13,23 +13,19 @@ const razorpay = new Razorpay({
   key_secret: process.env.RAZORPAY_KEY_SECRET,
 });
 
+
+
 const createOrder = async (req, res) => {
   try {
-
-    /* ================= FRAUD PROTECTION ================= */
-
     const userId = req.user._id;
 
     const isHighRisk = await checkFraudRisk(userId);
-
     if (isHighRisk) {
       return res.status(403).json({
         success: false,
         message: "Your account is temporarily blocked due to suspicious activity.",
       });
     }
-
-    /* ================= ORDER INPUT ================= */
 
     const { items, shippingAddress, paymentMethod } = req.body;
 
@@ -47,50 +43,10 @@ const createOrder = async (req, res) => {
       });
     }
 
-    /* ================= CALCULATE SUBTOTAL ================= */
-
     let subtotal = 0;
-
-    for (const item of items) {
-      subtotal += item.price * item.qty;
-    }
-
-    /* ================= MEMBERSHIP DISCOUNT ================= */
-
-    const user = await User.findById(req.user._id);
-
-    const activeMembership = user?.memberships?.find(
-      (m) => m.isActive && new Date(m.endDate) > new Date()
-    );
-
-    const discountPercent = activeMembership?.discountPercent || 0;
-
-    const discountAmount = subtotal * (discountPercent / 100);
-
-    const discountedSubtotal = subtotal - discountAmount;
-
-    /* ================= SHIPPING ================= */
-
-    const SHIPPING_FEE = 60;
-
-    const shippingFee = discountedSubtotal > 0 ? SHIPPING_FEE : 0;
-
-    /* ================= TAX ================= */
-
-    const TAX_RATE = 0.02;
-
-    const taxAmount = discountedSubtotal * TAX_RATE;
-
-    /* ================= FINAL TOTAL ================= */
-
-    const finalTotal = discountedSubtotal + shippingFee + taxAmount;
-
-    /* ================= CREATE ORDERS ================= */
-
     const createdOrders = [];
 
     for (const item of items) {
-
       const product = await Product.findById(item.productId).populate("vendor");
 
       if (!product) {
@@ -100,14 +56,48 @@ const createOrder = async (req, res) => {
         });
       }
 
+      if (!item.size) {
+        return res.status(400).json({
+          success: false,
+          message: "Size is required",
+        });
+      }
+
+      const sizeIndex = product.sizes.findIndex(
+        (s) => s.size.toUpperCase() === item.size.toUpperCase()
+      );
+
+      if (sizeIndex === -1) {
+        return res.status(400).json({
+          success: false,
+          message: `Size ${item.size} not available`,
+        });
+      }
+
+      if (product.sizes[sizeIndex].stock < item.qty) {
+        return res.status(400).json({
+          success: false,
+          message: `Out of stock for ${product.name} (${item.size})`,
+        });
+      }
+
+      product.sizes[sizeIndex].stock -= item.qty;
+      await product.save();
+
       const itemTotal = item.price * item.qty;
+      subtotal += itemTotal;
+
+      const discountPercent = 0;
+      const discountAmount = 0;
+      const shippingFee = 0;
+      const taxAmount = itemTotal * 0.02;
+      const finalTotal = itemTotal - discountAmount + shippingFee + taxAmount;
 
       const commissionAmount = itemTotal * COMMISSION_RATE;
 
       const order = await Order.create({
         user: req.user._id,
         vendor: product.vendor._id,
-
         items: [
           {
             product: product._id,
@@ -117,36 +107,21 @@ const createOrder = async (req, res) => {
             status: "pending",
           },
         ],
-
         shippingAddress: {
           address: shippingAddress.address,
           city: shippingAddress.city,
           state: shippingAddress.state,
           zip: shippingAddress.postalCode,
         },
-
         paymentMethod,
-
-        subtotal: itemTotal,
-
-        discountPercent,
-        discountAmount,
-        shippingFee,
-        taxAmount,
-
         totalAmount: finalTotal,
-
         commissionAmount,
-
         vendorEarning: itemTotal - commissionAmount,
-
+        paymentStatus: paymentMethod === "cod" ? "pending" : "paid",
         orderStatus: "pending",
-        paymentStatus: "pending",
       });
 
       createdOrders.push(order);
-
-      /* ===== FRAUD LOG : ORDER CREATED ===== */
 
       try {
         await FraudLog.create({
@@ -158,10 +133,7 @@ const createOrder = async (req, res) => {
       } catch (logErr) {
         console.error("Fraud log error:", logErr.message);
       }
-
     }
-
-    /* ================= COD ================= */
 
     if (paymentMethod === "cod") {
       return res.status(201).json({
@@ -169,19 +141,12 @@ const createOrder = async (req, res) => {
         orders: createdOrders,
         billing: {
           subtotal,
-          discountPercent,
-          discountAmount,
-          shippingFee,
-          taxAmount,
-          total: finalTotal,
         },
       });
     }
 
-    /* ================= RAZORPAY ================= */
-
     const razorpayOrder = await razorpay.orders.create({
-      amount: Math.round(finalTotal * 100),
+      amount: Math.round(subtotal * 100),
       currency: "INR",
       receipt: `order_${Date.now()}`,
     });
@@ -196,23 +161,15 @@ const createOrder = async (req, res) => {
       },
       billing: {
         subtotal,
-        discountPercent,
-        discountAmount,
-        shippingFee,
-        taxAmount,
-        total: finalTotal,
       },
     });
-
   } catch (err) {
-
     console.error("CREATE ORDER ERROR:", err);
 
     res.status(500).json({
       success: false,
       message: err.message || "Order creation failed",
     });
-
   }
 };
 
@@ -237,7 +194,6 @@ const verifyOnlinePayment = async (req, res) => {
     /* ===== FRAUD LOG : PAYMENT FAILED ===== */
 
     if (expectedSignature !== razorpay_signature) {
-
       try {
         await FraudLog.create({
           userId: req.user._id,
@@ -255,13 +211,53 @@ const verifyOnlinePayment = async (req, res) => {
       });
     }
 
-    await Order.updateMany(
-      { _id: { $in: orderIds } },
-      {
-        paymentStatus: "paid",
-        orderStatus: "confirmed",
+    /* ================= STOCK + ORDER UPDATE ================= */
+
+const orders = await Order.find({ _id: { $in: orderIds } });
+
+    for (const order of orders) {
+      for (const item of order.items) {
+        const product = await Product.findById(item.product);
+
+        if (!product) continue;
+
+        const sizeIndex = product.sizes.findIndex(
+          (s) => s.size === item.size
+        );
+
+        if (sizeIndex === -1) {
+          return res.status(400).json({
+            success: false,
+            message: `Size ${item.size} not found`,
+          });
+        }
+
+        // 🔥 ATOMIC STOCK UPDATE
+        const updated = await Product.updateOne(
+          {
+            _id: product._id,
+            "sizes.size": item.size,
+            "sizes.stock": { $gte: item.quantity },
+          },
+          {
+            $inc: { "sizes.$.stock": -item.quantity },
+          }
+        );
+
+        if (updated.modifiedCount === 0) {
+          return res.status(400).json({
+            success: false,
+            message: `Out of stock for ${product.name} (${item.size})`,
+          });
+        }
       }
-    );
+
+      // ✅ UPDATE ORDER STATUS
+      order.paymentStatus = "paid";
+      order.orderStatus = "confirmed";
+
+      await order.save();
+    }
 
     /* ===== FRAUD LOG : PAYMENT SUCCESS ===== */
 
@@ -280,7 +276,6 @@ const verifyOnlinePayment = async (req, res) => {
       success: true,
       message: "Payment verified & orders confirmed",
     });
-
   } catch (err) {
     console.error("VERIFY PAYMENT ERROR:", err);
     res.status(500).json({
@@ -289,6 +284,8 @@ const verifyOnlinePayment = async (req, res) => {
     });
   }
 };
+
+
 
 /* ================= GET ORDERS ================= */
 
@@ -377,6 +374,22 @@ const cancelOrder = async (req, res) => {
     order.orderStatus = "cancelled";
     order.cancelReason = reason;
     order.items.forEach((item) => (item.status = "cancelled"));
+
+    // 🔄 RESTORE STOCK
+for (const item of order.items) {
+  const product = await Product.findById(item.product);
+
+  if (!product) continue;
+
+  /** */ const sizeIndex = product.sizes.findIndex(
+  (s) => s.size.toUpperCase() === item.size.toUpperCase()
+);
+
+  if (sizeIndex !== -1) {
+    product.sizes[sizeIndex].stock += item.quantity;
+    await product.save();
+  }
+}
 
     await order.save();
 

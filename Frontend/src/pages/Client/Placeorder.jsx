@@ -129,12 +129,31 @@ const Checkout = () => {
   };
 
   const confirmCODOrder = async () => {
-    try {
-      setPlacingOrder(true);
-      await api.post("/api/orders", { paymentMethod: "cod", shippingAddress, items: cartList.map((i) => ({ productId: i.product._id, price: i.product.price, qty: i.qty, size: i.size })) });
-      fetchCart(); setShowCODModal(false); setShowSuccessModal(true);
-    } finally { setPlacingOrder(false); }
-  };
+  try {
+    setPlacingOrder(true);
+
+    await api.post("/api/orders", {
+      paymentMethod: "cod",
+      shippingAddress,
+      items: cartList.map((i) => ({
+  productId: i.product._id,
+  price: Number(i.product.price),
+  qty: Number(i.qty),
+  size: i.size?.trim().toUpperCase(), // 🔥 FIX HERE
+}))
+    });
+
+    fetchCart();
+    setShowCODModal(false);
+    setShowSuccessModal(true);
+
+  } catch (err) {
+    console.log("🔥 BACKEND ERROR:", err.response?.data);
+    alert(err.response?.data?.message);
+  } finally {
+    setPlacingOrder(false);
+  }
+};
 
   /* ================= RESPONSIVE UI STYLES ================= */
 

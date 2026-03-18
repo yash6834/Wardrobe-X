@@ -94,7 +94,7 @@ const DashBoard = () => {
         </div>
 
         {/* STAT CARDS */}
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
           <Card
             icon={<Users size={24} strokeWidth={2.5} />}
             title="Total Users"
@@ -119,13 +119,7 @@ const DashBoard = () => {
             iconColor="text-orange-600"
           />
 
-          <Card
-            icon={<Clock size={24} strokeWidth={2.5} />}
-            title="Pending Review"
-            value={pendingCount}
-            bgColor="bg-rose-100"
-            iconColor="text-rose-600"
-          />
+          
         </div>
 
         {/* ACTION ALERT - Moved up for better visibility */}

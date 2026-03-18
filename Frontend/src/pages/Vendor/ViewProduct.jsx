@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
 import api from "../../api/api";
-import { Trash2, Edit, X, Plus, Package, Tag, Layers } from "lucide-react";
+import { Trash2, Edit, X, Plus, Package, Tag, Layers, CheckCircle, AlertCircle } from "lucide-react";
 import { toast } from "react-toastify";
 
 const VendorViewProducts = () => {
@@ -45,82 +45,101 @@ const VendorViewProducts = () => {
   }, []);
 
   return (
-    <div className="p-4 md:p-8 bg-[#F8FAFC] min-h-screen">
-      {/* ================= HEADER ================= */}
+    <div className="p-4 md:p-8 bg-slate-50 min-h-screen font-sans">
+      
+      {/* HEADER */}
       <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-8">
         <div>
-          <h2 className="text-2xl font-bold text-gray-900">My Product Catalog</h2>
-          <p className="text-sm text-gray-500">Manage your listings and product status</p>
+          <h2 className="text-3xl font-extrabold text-slate-900 tracking-tight">My Product Catalog</h2>
+          <p className="text-slate-500 mt-1">Manage your listings, pricing, and product status</p>
         </div>
         <Link
           to="/seller/addproduct"
-          className="flex items-center gap-2 bg-indigo-600 hover:bg-indigo-700 text-white px-5 py-2.5 rounded-xl font-semibold transition-all shadow-md shadow-indigo-100"
+          className="flex items-center gap-2 bg-indigo-600 hover:bg-indigo-700 text-white px-6 py-3 rounded-xl font-semibold transition-all shadow-lg shadow-indigo-200 hover:shadow-indigo-300 hover:-translate-y-0.5"
         >
-          <Plus size={20} /> Add New Product
+          <Plus size={20} strokeWidth={2.5} /> Add New Product
         </Link>
       </div>
 
-      {/* ================= EMPTY STATE ================= */}
+      {/* EMPTY STATE */}
       {products.length === 0 && (
-        <div className="flex flex-col items-center justify-center py-20 bg-white rounded-3xl border-2 border-dashed border-gray-200">
-          <Package size={48} className="text-gray-300 mb-4" />
-          <p className="text-gray-500 font-medium">No products added yet</p>
-          <Link to="/seller/addproduct" className="text-indigo-600 text-sm mt-2 hover:underline">
-            Click here to list your first item
+        <div className="flex flex-col items-center justify-center py-24 bg-white rounded-3xl border-2 border-dashed border-slate-200 shadow-sm">
+          <div className="bg-indigo-50 p-6 rounded-full mb-6">
+            <Package size={56} className="text-indigo-400" />
+          </div>
+          <h3 className="text-xl font-bold text-slate-800 mb-2">No products found</h3>
+          <p className="text-slate-500 font-medium mb-6 text-center max-w-sm">
+            Your catalog is currently empty. Start adding products to showcase them to your customers.
+          </p>
+          <Link 
+            to="/seller/addproduct" 
+            className="flex items-center gap-2 text-indigo-600 font-semibold hover:text-indigo-700 bg-indigo-50 px-6 py-2.5 rounded-lg transition-colors"
+          >
+            <Plus size={18} /> Add Your First Item
           </Link>
         </div>
       )}
 
-      {/* ================= PRODUCT GRID ================= */}
+      {/* PRODUCT GRID */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
         {products.map((p) => (
           <div
             key={p._id}
-            className="group bg-white rounded-2xl border border-gray-100 shadow-sm hover:shadow-xl transition-all duration-300 overflow-hidden relative"
+            className="group flex flex-col bg-white rounded-2xl border border-slate-200 shadow-sm hover:shadow-xl transition-all duration-300 overflow-hidden relative"
           >
             {/* Status Badge */}
-            <div className={`absolute top-3 right-3 z-10 text-[10px] uppercase tracking-widest font-bold px-2.5 py-1 rounded-full shadow-sm ${
-              p.isApproved ? "bg-emerald-500 text-white" : "bg-amber-400 text-white"
+            <div className={`absolute top-4 right-4 z-10 flex items-center gap-1.5 text-xs font-bold px-3 py-1.5 rounded-full shadow-sm backdrop-blur-md ${
+              p.isApproved 
+                ? "bg-emerald-100/90 text-emerald-700 border border-emerald-200" 
+                : "bg-amber-100/90 text-amber-700 border border-amber-200"
             }`}>
+              {p.isApproved ? <CheckCircle size={12} /> : <AlertCircle size={12} />}
               {p.isApproved ? "Approved" : "Pending"}
             </div>
 
-            {/* Image Section */}
+            {/* Image */}
             <div 
-              className="relative h-48 overflow-hidden cursor-pointer bg-gray-50"
+              className="relative h-56 cursor-pointer bg-slate-100 overflow-hidden"
               onClick={() => setSelectedProduct(p)}
             >
               <img
                 src={p.image?.length ? `${BASE_URL}${p.image[0]}` : "https://via.placeholder.com/300"}
                 alt={p.name}
-                className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-110"
+                className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500 ease-in-out"
               />
-              <div className="absolute inset-0 bg-black/20 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
-                <span className="text-white text-xs font-bold bg-black/40 px-3 py-1.5 rounded-full backdrop-blur-sm">View Details</span>
-              </div>
+              <div className="absolute inset-0 bg-black/0 group-hover:bg-black/5 transition-colors" />
             </div>
 
-            {/* Content Section */}
-            <div className="p-5">
-              <h3 className="font-bold text-gray-800 truncate mb-1">{p.name}</h3>
-              <div className="flex items-center justify-between mb-3">
-                <span className="text-lg font-black text-indigo-600">₹{p.price.toLocaleString()}</span>
-                <span className="text-[11px] text-gray-400 bg-gray-50 px-2 py-0.5 rounded border border-gray-100 flex items-center gap-1">
-                  <Layers size={10} /> {p.category}
-                </span>
+            {/* CONTENT */}
+            <div className="p-5 flex flex-col flex-grow">
+              <div className="flex items-center gap-1.5 text-xs font-semibold text-indigo-600 mb-2 uppercase tracking-wider">
+                <Tag size={12} /> {p.category}
+              </div>
+              <h3 className="font-bold text-slate-800 text-lg leading-tight truncate mb-2 cursor-pointer hover:text-indigo-600 transition-colors" onClick={() => setSelectedProduct(p)}>
+                {p.name}
+              </h3>
+
+              <div className="mt-auto pt-4 flex items-end justify-between">
+                <div>
+                  <p className="text-xs text-slate-400 font-medium mb-1">Price</p>
+                  <span className="text-xl font-black text-slate-900">
+                    ₹{p.price.toLocaleString()}
+                  </span>
+                </div>
               </div>
 
-              {/* Actions */}
-              <div className="flex items-center gap-2 pt-4 border-t border-gray-50">
+              {/* CARD ACTIONS */}
+              <div className="flex gap-3 pt-5 mt-5 border-t border-slate-100">
                 <Link
                   to={`/seller/editproduct/${p._id}`}
-                  className="flex-1 flex items-center justify-center gap-2 bg-gray-50 hover:bg-indigo-50 text-gray-600 hover:text-indigo-600 py-2 rounded-lg text-xs font-bold transition-colors border border-gray-100"
+                  className="flex-1 flex items-center justify-center gap-2 bg-slate-50 hover:bg-indigo-50 text-slate-600 hover:text-indigo-600 py-2.5 rounded-xl text-sm font-semibold transition-colors border border-slate-200 hover:border-indigo-200"
                 >
-                  <Edit size={14} /> Edit
+                  <Edit size={16} /> Edit
                 </Link>
-                <button
+                <button 
                   onClick={() => handleDelete(p._id)}
-                  className="p-2 text-gray-400 hover:text-rose-600 hover:bg-rose-50 rounded-lg transition-colors border border-transparent hover:border-rose-100"
+                  className="p-2.5 rounded-xl bg-slate-50 text-slate-400 hover:bg-red-50 hover:text-red-500 border border-slate-200 hover:border-red-200 transition-colors"
+                  title="Delete Product"
                 >
                   <Trash2 size={18} />
                 </button>
@@ -130,66 +149,101 @@ const VendorViewProducts = () => {
         ))}
       </div>
 
-      {/* ================= MODAL ================= */}
+      {/* 🔥 MODAL */}
       {selectedProduct && (
-        <div className="fixed inset-0 bg-slate-900/60 backdrop-blur-sm flex items-center justify-center z-[100] p-4">
-          <div className="bg-white rounded-3xl w-full max-w-2xl overflow-hidden shadow-2xl relative animate-in fade-in zoom-in duration-200">
-            {/* Close Button */}
+        <div className="fixed inset-0 bg-slate-900/40 backdrop-blur-sm flex items-center justify-center z-50 p-4 sm:p-6 animate-in fade-in duration-200">
+          <div className="bg-white rounded-[2rem] shadow-2xl w-full max-w-4xl overflow-hidden relative flex flex-col md:flex-row max-h-[90vh]">
+
+            {/* FLOATING CLOSE BUTTON */}
             <button
               onClick={() => setSelectedProduct(null)}
-              className="absolute top-5 right-5 p-2 bg-gray-100 hover:bg-gray-200 rounded-full text-gray-600 transition-colors z-10"
+              className="absolute top-4 right-4 z-20 p-2 bg-white/80 hover:bg-slate-100 text-slate-600 rounded-full backdrop-blur-md transition-colors shadow-sm"
             >
-              <X size={20} />
+              <X size={20} strokeWidth={2.5} />
             </button>
 
-            <div className="flex flex-col md:flex-row">
-              {/* Modal Image */}
-              <div className="md:w-1/2 bg-gray-50 p-6 flex items-center justify-center">
-                <img
-                  src={selectedProduct.image?.length ? `${BASE_URL}${selectedProduct.image[0]}` : "https://via.placeholder.com/300"}
-                  alt={selectedProduct.name}
-                  className="max-h-72 w-full object-contain drop-shadow-2xl"
-                />
+            {/* MODAL IMAGE */}
+            <div className="md:w-1/2 bg-slate-100 relative min-h-[300px] md:min-h-full">
+              <img
+                src={selectedProduct.image?.length ? `${BASE_URL}${selectedProduct.image[0]}` : "https://via.placeholder.com/600"}
+                alt={selectedProduct.name}
+                className="absolute inset-0 w-full h-full object-cover"
+              />
+            </div>
+
+            {/* MODAL DETAILS */}
+            <div className="md:w-1/2 p-6 md:p-10 overflow-y-auto flex flex-col">
+              
+              <div className="flex items-center gap-2 text-sm font-bold text-indigo-600 uppercase tracking-widest mb-3">
+                <Tag size={14} /> {selectedProduct.category}
+              </div>
+              
+              <h2 className="text-3xl font-extrabold text-slate-900 mb-2 leading-tight">
+                {selectedProduct.name}
+              </h2>
+              
+              <p className="text-3xl font-black text-slate-800 mb-6">
+                ₹{selectedProduct.price.toLocaleString()}
+              </p>
+
+              <div className="mb-8">
+                <h4 className="text-sm font-bold text-slate-900 mb-2 flex items-center gap-2">
+                  <Layers size={16} className="text-slate-400"/> Description
+                </h4>
+                <p className="text-slate-600 leading-relaxed text-sm">
+                  {selectedProduct.description || "No description provided for this product."}
+                </p>
               </div>
 
-              {/* Modal Info */}
-              <div className="md:w-1/2 p-8">
-                <div className="flex items-center gap-2 mb-2">
-                   <Tag size={14} className="text-indigo-500" />
-                   <span className="text-xs font-bold text-indigo-500 uppercase tracking-widest">{selectedProduct.subCategory}</span>
-                </div>
-                <h2 className="text-2xl font-black text-gray-900 mb-2 leading-tight">
-                  {selectedProduct.name}
-                </h2>
-                <p className="text-3xl font-light text-gray-400 mb-6">₹{selectedProduct.price.toLocaleString()}</p>
-                
-                <div className="mb-8">
-                  <h4 className="text-xs font-bold text-gray-400 uppercase mb-2">Description</h4>
-                  <p className="text-sm text-gray-600 leading-relaxed">
-                    {selectedProduct.description || "No detailed description provided for this item."}
+              {/* 🔥 SIZES & INVENTORY */}
+              <div className="mb-10">
+                <h4 className="text-sm font-bold text-slate-900 mb-3">Available Sizes & Stock</h4>
+                {selectedProduct.sizes?.length > 0 ? (
+                  <div className="flex gap-2.5 flex-wrap">
+                    {selectedProduct.sizes.map((s, i) => (
+                      <div
+                        key={i}
+                        className={`flex flex-col items-center justify-center min-w-[4rem] px-3 py-2 rounded-xl border-2 ${
+                          s.stock > 0
+                            ? "bg-slate-50 border-slate-200 text-slate-700"
+                            : "bg-red-50 border-red-100 text-red-500 opacity-75"
+                        }`}
+                      >
+                        <span className="font-bold text-sm">{s.size}</span>
+                        <span className="text-[10px] font-medium uppercase tracking-wider mt-0.5">
+                          {s.stock > 0 ? `${s.stock} Left` : "Out"}
+                        </span>
+                      </div>
+                    ))}
+                  </div>
+                ) : (
+                  <p className="text-sm text-slate-400 italic bg-slate-50 p-3 rounded-xl border border-slate-100 inline-block">
+                    No sizing information available.
                   </p>
-                </div>
-
-                {/* Modal Footer Actions */}
-                <div className="flex gap-3 pt-6 border-t border-gray-100">
-                  <Link
-                    to={`/seller/editproduct/${selectedProduct._id}`}
-                    className="flex-1 bg-indigo-600 hover:bg-indigo-700 text-white flex items-center justify-center gap-2 py-3 rounded-xl font-bold transition-all"
-                  >
-                    <Edit size={18} /> Edit Product
-                  </Link>
-                  <button
-                    onClick={() => handleDelete(selectedProduct._id)}
-                    className="px-4 py-3 bg-rose-50 text-rose-600 hover:bg-rose-100 rounded-xl transition-colors"
-                  >
-                    <Trash2 size={20} />
-                  </button>
-                </div>
+                )}
               </div>
+
+              {/* MODAL ACTIONS */}
+              <div className="mt-auto flex gap-3 pt-6 border-t border-slate-100">
+                <Link 
+                  to={`/seller/editproduct/${selectedProduct._id}`}
+                  className="flex-1 flex items-center justify-center gap-2 bg-indigo-600 hover:bg-indigo-700 text-white py-3.5 rounded-xl font-bold transition-all shadow-md shadow-indigo-100 hover:shadow-lg"
+                >
+                  <Edit size={18} /> Edit Product
+                </Link>
+                <button 
+                  onClick={() => handleDelete(selectedProduct._id)}
+                  className="flex items-center justify-center gap-2 px-6 py-3.5 bg-red-50 hover:bg-red-500 text-red-600 hover:text-white rounded-xl font-bold transition-all border border-red-100 hover:border-red-500"
+                >
+                  <Trash2 size={18} /> Delete
+                </button>
+              </div>
+
             </div>
           </div>
         </div>
       )}
+
     </div>
   );
 };

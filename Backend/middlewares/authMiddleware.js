@@ -18,17 +18,29 @@ const protect = async (req, res, next) => {
 
       const user = await User.findById(decoded.id).select("-password");
 
-      if (user) {
-        req.user = user;
+      if (!user) {
+        return res.status(401).json({
+          success: false,
+          message: "User not found",
+        });
       }
 
+      req.user = user;
+      return next();
+
     } catch (error) {
-      console.error("JWT Error:", error.message);
+      return res.status(401).json({
+        success: false,
+        message: "Invalid token",
+      });
     }
   }
 
-  // Continue even if no token (guest user)
-  next();
+  //  REMOVE guest access
+  return res.status(401).json({
+    success: false,
+    message: "Not authorized, please login",
+  });
 };
 
 /* ================= ADMIN ONLY ================= */

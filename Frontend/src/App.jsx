@@ -48,7 +48,6 @@ import VendorViewProducts from "./pages/Vendor/ViewProduct";
 import VendorOrders from "./pages/Vendor/Orders.jsx";
 import VendorPayouts from "./pages/Vendor/PayOut.jsx";
 import VendorAnalytics from "./pages/Vendor/Analytics.jsx";
-import VendorProducts from "./pages/Vendor/VendorProduct.jsx";
 import VendorAddProduct from "./pages/Vendor/AddProduct.jsx";
 import VendorEditProduct from "./pages/Vendor/VendorEditProduct.jsx";
 import VendorReturns from "./pages/Vendor/Return.jsx";
@@ -109,7 +108,6 @@ const App = () => {
           <Route path="orders" element={<VendorOrders />} />
           <Route path="payouts" element={<VendorPayouts />} />
           <Route path="analytics" element={<VendorAnalytics />} />
-          <Route path="product" element={<VendorProducts />} />
           <Route path="addproduct" element={<VendorAddProduct />} />
           <Route path="editproduct/:id" element={<VendorEditProduct />} />
           <Route path="returns" element={<VendorReturns />} />
