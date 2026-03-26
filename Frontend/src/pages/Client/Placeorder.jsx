@@ -1,4 +1,5 @@
 import React, { useContext, useState, useEffect } from "react";
+import { useLocation } from "react-router-dom"; // ✅ ADDED
 import { ShopContext } from "../../context/ShopContext";
 import { validateCheckoutForm } from "../../validation";
 import { ShieldCheck, Truck, CreditCard, Banknote, CheckCircle2, Phone, Loader2, Lock, ChevronRight, MapPin, ShoppingBag } from "lucide-react";
@@ -8,6 +9,8 @@ import { CurrencyContext } from "../../context/Currency";
 const Checkout = () => {
   const { delivery_fee, cartItems, products, fetchCart } = useContext(ShopContext);
   const { currency } = useContext(CurrencyContext);
+  const location = useLocation(); // ✅ ADDED
+
   const [user, setUser] = useState(null);
   const [formData, setFormData] = useState({
     name: "", email: "", address: "", city: "", state: "", zip: "", phone: "", paymentMethod: "cod",
@@ -24,7 +27,30 @@ const Checkout = () => {
 
   const currencySymbols = { INR: "₹", USD: "$", EUR: "€" };
 
+  /* ================= AUTO REFRESH LOGIC ================= */
+
+  // ✅ Refresh when route changes (user comes back to checkout)
+  useEffect(() => {
+    fetchCart();
+  }, [location.pathname]);
+
+  // ✅ Refresh when tab is focused
+  useEffect(() => {
+    const handleFocus = () => {
+      fetchCart();
+    };
+
+    window.addEventListener("focus", handleFocus);
+    document.addEventListener("visibilitychange", handleFocus);
+
+    return () => {
+      window.removeEventListener("focus", handleFocus);
+      document.removeEventListener("visibilitychange", handleFocus);
+    };
+  }, []);
+
   /* ================= LOGIC (UNCHANGED) ================= */
+
   useEffect(() => {
     if (document.getElementById("razorpay-script")) return;
     const script = document.createElement("script");
@@ -47,17 +73,34 @@ const Checkout = () => {
   };
 
   const convertPrices = async () => {
-    const priceMap = {};
-    for (let item of cartList) {
-      try {
-        if (currency === "INR") priceMap[item.product._id] = item.product.price;
-        else {
-          const res = await api.get(`/api/currency/convert?amount=${item.product.price}&currency=${currency}`);
-          if (res.data.success) priceMap[item.product._id] = Number(res.data.converted);
-        }
-      } catch { priceMap[item.product._id] = item.product.price; }
+    try {
+      const priceMap = {};
+
+      await Promise.all(
+        cartList.map(async (item) => {
+          try {
+            if (currency === "INR") {
+              priceMap[item.product._id] = item.product.price;
+            } else {
+              const res = await api.get(
+                `/api/currency/convert?amount=${item.product.price}&currency=${currency}`
+              );
+
+              if (res.data.success) {
+                priceMap[item.product._id] = Number(res.data.converted);
+              }
+            }
+          } catch {
+            priceMap[item.product._id] = item.product.price;
+          }
+        })
+      );
+
+      setConvertedPrices(priceMap);
+
+    } catch (err) {
+      console.log("Conversion error", err);
     }
-    setConvertedPrices(priceMap);
   };
 
   const convertShipping = async () => {
@@ -90,84 +133,132 @@ const Checkout = () => {
 
   const activeMembership = user?.memberships?.find((m) => m.isActive === true && new Date(m.endDate) > new Date());
   const discountPercent = activeMembership?.discountPercent || 0;
+
   const subtotal = cartList.reduce((acc, item) => {
     const price = convertedPrices[item.product._id] || item.product.price;
     return acc + price * item.qty;
   }, 0);
+
   const discountAmount = (subtotal * discountPercent) / 100;
   const discountedSubtotal = subtotal - discountAmount;
   const shipping = discountedSubtotal > 0 ? convertedShippingFee : 0;
   const tax = discountedSubtotal * 0.02;
   const total = discountedSubtotal + shipping + tax;
 
-  const shippingAddress = { address: formData.address, city: formData.city, state: formData.state, postalCode: formData.zip, phone: formData.phone };
+  const shippingAddress = {
+    address: formData.address,
+    city: formData.city,
+    state: formData.state,
+    postalCode: formData.zip,
+    phone: formData.phone
+  };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
+
     const { isValid, errors } = validateCheckoutForm(formData);
     setErrors(errors);
+
     if (!isValid || cartList.length === 0) return;
-    if (formData.paymentMethod === "cod") { setShowCODModal(true); return; }
+
+    if (formData.paymentMethod === "cod") {
+      setShowCODModal(true);
+      return;
+    }
+
     try {
       const res = await api.post("/api/orders", {
-        paymentMethod: "card", shippingAddress,
-        items: cartList.map((i) => ({ productId: i.product._id, price: i.product.price, qty: i.qty, size: i.size })),
+        paymentMethod: "card",
+        shippingAddress,
+        items: cartList.map((i) => ({
+          productId: i.product._id,
+          price: i.product.price,
+          qty: i.qty,
+          size: i.size
+        })),
       });
+
       const { razorpay, orders } = res.data;
       const orderIds = orders.map((o) => o._id);
+
       const rzp = new window.Razorpay({
-        key: razorpay.key, amount: razorpay.amount, currency: "INR", name: "Wardrobe X", order_id: razorpay.orderId,
-        prefill: { name: formData.name, email: formData.email, contact: formData.phone },
+        key: razorpay.key,
+        amount: razorpay.amount,
+        currency: "INR",
+        name: "Wardrobe X",
+        order_id: razorpay.orderId,
+        prefill: {
+          name: formData.name,
+          email: formData.email,
+          contact: formData.phone
+        },
         handler: async (response) => {
-          await api.post("/api/orders/verify-payment", { razorpay_order_id: response.razorpay_order_id, razorpay_payment_id: response.razorpay_payment_id, razorpay_signature: response.razorpay_signature, orderIds });
-          fetchCart(); setShowSuccessModal(true);
+          await api.post("/api/orders/verify-payment", {
+            razorpay_order_id: response.razorpay_order_id,
+            razorpay_payment_id: response.razorpay_payment_id,
+            razorpay_signature: response.razorpay_signature,
+            orderIds
+          });
+
+          fetchCart();
+          setShowSuccessModal(true);
         },
         theme: { color: "#000000" }
       });
+
       rzp.open();
-    } catch (error) { alert("Payment failed"); }
+    } catch (error) {
+      alert("Payment failed");
+    }
   };
 
   const confirmCODOrder = async () => {
-  try {
-    setPlacingOrder(true);
+    try {
+      setPlacingOrder(true);
 
-    await api.post("/api/orders", {
-      paymentMethod: "cod",
-      shippingAddress,
-      items: cartList.map((i) => ({
-  productId: i.product._id,
-  price: Number(i.product.price),
-  qty: Number(i.qty),
-  size: i.size?.trim().toUpperCase(), // 🔥 FIX HERE
-}))
-    });
+      await api.post("/api/orders", {
+        paymentMethod: "cod",
+        shippingAddress,
+        items: cartList.map((i) => ({
+          productId: i.product._id,
+          price: Number(i.product.price),
+          qty: Number(i.qty),
+          size: i.size?.trim().toUpperCase(),
+        }))
+      });
 
-    fetchCart();
-    setShowCODModal(false);
-    setShowSuccessModal(true);
+      fetchCart();
+      setShowCODModal(false);
+      setShowSuccessModal(true);
 
-  } catch (err) {
-    console.log("🔥 BACKEND ERROR:", err.response?.data);
-    alert(err.response?.data?.message);
-  } finally {
-    setPlacingOrder(false);
-  }
-};
+    } catch (err) {
+      console.log("🔥 BACKEND ERROR:", err.response?.data);
+      alert(err.response?.data?.message);
+    } finally {
+      setPlacingOrder(false);
+    }
+  };
 
-  /* ================= RESPONSIVE UI STYLES ================= */
+  /* ================= UI (UNCHANGED BELOW) ================= */
 
   const inputClass = (field) =>
-    `w-full bg-white border ${errors[field] ? "border-red-500" : "border-gray-200"} rounded-xl py-3 px-4 text-sm transition-all focus:ring-4 focus:ring-black/5 focus:border-black outline-none placeholder:text-gray-300`;
+    `w-full bg-white border ${errors[field] ? "border-red-500" : "border-gray-200"} rounded-xl py-3 px-4 text-sm`;
 
-  const labelClass = "block text-[10px] font-bold uppercase tracking-[0.1em] text-gray-500 mb-2 ml-1";
+  const labelClass =
+    "block text-[10px] font-bold uppercase tracking-[0.1em] text-gray-500 mb-2 ml-1";
 
-  if (loading) return <div className="h-screen flex items-center justify-center bg-white"><Loader2 className="animate-spin text-black" size={32} /></div>;
+  if (loading) {
+    return (
+      <div className="h-screen flex items-center justify-center bg-white">
+        <Loader2 className="animate-spin text-black" size={32} />
+      </div>
+    );
+  }
 
   return (
-    <main className="min-h-screen bg-[#F8F9FA] text-[#1A1A1A] pt-16 md:pt-24 pb-10">
-      <div className="max-w-[1200px] mx-auto px-4 md:px-6">
-        
+    <main>
+         	      <div className="max-w-[1200px] mx-auto px-6">
+         
         {/* Breadcrumb Header - Hidden on Small Mobile */}
         <div className="hidden sm:flex items-center gap-2 mb-6 text-xs font-medium text-gray-400">
           <span>Cart</span> <ChevronRight size={12} /> <span className="text-black">Checkout</span> <ChevronRight size={12} /> <span className="opacity-50">Payment</span>

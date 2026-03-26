@@ -30,6 +30,7 @@ const Product = () => {
   const [size, setSize] = useState("");
   const [selectedImage, setSelectedImage] = useState("");
   const [convertedPrice, setConvertedPrice] = useState(null);
+  const [showSizeGuide, setShowSizeGuide] = useState(false);
 
   const { currency } = useContext(CurrencyContext);
   const { addToCart: addToCartContext } = useContext(ShopContext);
@@ -377,6 +378,17 @@ const Product = () => {
 
             {/* ADD TO CART */}
 
+            <div className="flex justify-between items-center mb-4">
+  <p className="text-sm font-medium">Select Size</p>
+
+  <button
+    onClick={() => setShowSizeGuide(true)}
+    className="text-xs underline text-gray-500 hover:text-black"
+  >
+    Size Guide
+  </button>
+</div>
+
            <button
   onClick={handleAddToCart}
   disabled={size && selectedSizeStock === 0}
@@ -418,6 +430,61 @@ const Product = () => {
           </div>
 
         </div>
+        {showSizeGuide && (
+  <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
+
+    <div className="bg-white rounded-lg p-6 w-[90%] max-w-md relative">
+
+      {/* CLOSE */}
+      <button
+        onClick={() => setShowSizeGuide(false)}
+        className="absolute top-3 right-3 text-gray-500 hover:text-black"
+      >
+        ✕
+      </button>
+
+      <h2 className="text-lg font-semibold mb-4">
+        Size Guide
+      </h2>
+
+      {/* SIZE TABLE */}
+      <table className="w-full text-sm border">
+        <thead>
+          <tr className="bg-gray-100">
+            <th className="p-2 border">Size</th>
+            <th className="p-2 border">Chest (in)</th>
+            <th className="p-2 border">Length (in)</th>
+          </tr>
+        </thead>
+
+        <tbody>
+          <tr>
+            <td className="p-2 border text-center">S</td>
+            <td className="p-2 border text-center">36-38</td>
+            <td className="p-2 border text-center">26</td>
+          </tr>
+          <tr>
+            <td className="p-2 border text-center">M</td>
+            <td className="p-2 border text-center">38-40</td>
+            <td className="p-2 border text-center">27</td>
+          </tr>
+          <tr>
+            <td className="p-2 border text-center">L</td>
+            <td className="p-2 border text-center">40-42</td>
+            <td className="p-2 border text-center">28</td>
+          </tr>
+          <tr>
+            <td className="p-2 border text-center">XL</td>
+            <td className="p-2 border text-center">42-44</td>
+            <td className="p-2 border text-center">29</td>
+          </tr>
+        </tbody>
+      </table>
+
+    </div>
+
+  </div>
+)}
 
       </main>
 

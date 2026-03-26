@@ -28,21 +28,25 @@ const DashBoard = () => {
   const [ordersByDate, setOrdersByDate] = useState([]);
   const [monthlySales, setMonthlySales] = useState([]);
   const [pendingCount, setPendingCount] = useState(0);
+  const [recentOrders, setRecentOrders] = useState([]);
 
   useEffect(() => {
     const loadDashboard = async () => {
       try {
-        const [statsRes, ordersRes, monthlyRes, pendingRes] = await Promise.all([
+        const [statsRes, ordersRes, monthlyRes, pendingRes, recentRes] = await Promise.all([
           api.get("/api/admin/dashboard/stats"),
           api.get("/api/admin/dashboard/orders-by-date"),
           api.get("/api/admin/dashboard/monthly-sales"),
           api.get("/api/admin/products/pending"),
+          api.get("/api/admin/orders/recent"),
+
         ]);
 
         setStats(statsRes.data.stats);
         setOrdersByDate(ordersRes.data);
         setMonthlySales(monthlyRes.data);
         setPendingCount(pendingRes.data.length);
+        setRecentOrders(recentRes.data); // ✅ correct
       } catch (err) {
         console.log(err);
       }
@@ -50,6 +54,8 @@ const DashBoard = () => {
 
     loadDashboard();
   }, []);
+
+
 
   // SKELETON LOADER
   if (!stats) {
@@ -72,7 +78,7 @@ const DashBoard = () => {
   return (
     <div className="min-h-screen bg-slate-50/50 p-6 md:p-8">
       <div className="max-w-[1500px] mx-auto space-y-8">
-        
+
         {/* HEADER */}
         <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
           <div>
@@ -118,8 +124,9 @@ const DashBoard = () => {
             bgColor="bg-orange-100"
             iconColor="text-orange-600"
           />
-
           
+
+
         </div>
 
         {/* ACTION ALERT - Moved up for better visibility */}
@@ -149,9 +156,13 @@ const DashBoard = () => {
           </div>
         )}
 
+
+
+
+
         {/* CHARTS */}
         <div className="grid lg:grid-cols-2 gap-6">
-          
+
           {/* ORDERS TREND */}
           <ChartCard
             title="Orders Trend"
@@ -169,7 +180,7 @@ const DashBoard = () => {
                 <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#e2e8f0" />
                 <XAxis dataKey="date" axisLine={false} tickLine={false} tick={{ fill: '#64748b', fontSize: 12 }} dy={10} />
                 <YAxis axisLine={false} tickLine={false} tick={{ fill: '#64748b', fontSize: 12 }} />
-                <Tooltip 
+                <Tooltip
                   contentStyle={{ borderRadius: '12px', border: 'none', boxShadow: '0 4px 6px -1px rgb(0 0 0 / 0.1)' }}
                 />
                 <Area
@@ -195,7 +206,7 @@ const DashBoard = () => {
                 <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#e2e8f0" />
                 <XAxis dataKey="month" axisLine={false} tickLine={false} tick={{ fill: '#64748b', fontSize: 12 }} dy={10} />
                 <YAxis axisLine={false} tickLine={false} tick={{ fill: '#64748b', fontSize: 12 }} />
-                <Tooltip 
+                <Tooltip
                   cursor={{ fill: '#f1f5f9' }}
                   contentStyle={{ borderRadius: '12px', border: 'none', boxShadow: '0 4px 6px -1px rgb(0 0 0 / 0.1)' }}
                 />
@@ -209,6 +220,77 @@ const DashBoard = () => {
             </ResponsiveContainer>
           </ChartCard>
 
+        </div>
+
+        <div className="bg-white rounded-2xl p-6 shadow-sm border">
+          <h3 className="text-lg font-bold mb-4">Recent Orders</h3>
+
+          <div className="overflow-x-auto">
+            <table className="w-full text-sm">
+              <thead>
+                <tr className="text-left text-slate-500 border-b">
+                  <th className="py-2">Order ID</th>
+                  <th>User</th>
+                  <th>Amount</th>
+                  <th>Status</th>
+                  <th>Date</th>
+                </tr>
+              </thead>
+
+              <tbody>
+                {recentOrders && recentOrders.length > 0 ? (
+                  recentOrders.map((order) => (
+                    <tr key={order._id} className="border-b hover:bg-slate-50">
+
+                      {/* ORDER ID */}
+                      <td className="py-3 font-medium text-slate-700">
+                        #{order._id.slice(-6)}
+                      </td>
+
+                      {/* USER */}
+                      <td className="py-3">
+                        {order.user?.name || "Guest"}
+                      </td>
+
+                      {/* AMOUNT */}
+                      <td className="py-3 font-semibold text-slate-800">
+                        ₹{order.totalAmount.toFixed(2)}
+                      </td>
+
+                      {/* STATUS */}
+                      <td className="py-3">
+  <span
+    className={`px-2 py-1 rounded text-xs font-medium ${
+      (order.orderStatus || "pending") === "delivered"
+        ? "bg-green-200 text-green-600"
+        : (order.orderStatus || "pending") === "shipped"
+        ? "bg-blue-200 text-blue-600"
+        : (order.orderStatus || "pending") === "cancelled"
+        ? "bg-red-200 text-red-600"
+        : "bg-yellow-200 text-yellow-600  "
+    }`}
+  >
+    {order.orderStatus || "pending"}
+  </span>
+</td>
+
+                      {/* DATE */}
+                      <td className="py-3 text-slate-500 text-xs">
+                        {new Date(order.createdAt).toLocaleDateString()}
+                      </td>
+
+                    </tr>
+                  ))
+                ) : (
+                  <tr>
+                    <td colSpan="5" className="text-center py-6 text-slate-400">
+                      No recent orders found
+                    </td>
+                  </tr>
+                )}
+              </tbody>
+            </table>
+          </div>
         </div>
       </div>
     </div>

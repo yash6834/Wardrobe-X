@@ -502,6 +502,22 @@ const checkFraudRisk = async (userId) => {
   return isStillBlocked;
 };
 
+
+
+const getRecentOrders = async (req, res) => {
+  try {
+    const orders = await Order.find()
+      .populate("user", "name")
+      .sort({ createdAt: -1 })
+      .limit(5);
+
+    res.status(200).json(orders);
+  } catch (error) {
+    console.error("Recent Orders Error:", error);
+    res.status(500).json({ message: "Server error while fetching recent orders" });
+  }
+};
+
 module.exports = {
   createOrder,
   verifyOnlinePayment,
@@ -510,5 +526,6 @@ module.exports = {
   cancelOrder,
   vendorMarkDelivered,
   getOrderById,
-  checkFraudRisk
+  checkFraudRisk,
+  getRecentOrders,
 };

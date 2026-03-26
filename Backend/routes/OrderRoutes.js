@@ -7,6 +7,7 @@ const {
   vendorMarkDelivered,
   verifyOnlinePayment,
   getOrderById,
+  getRecentOrders,
 } = require("../controller/OrderController");
 
 const { protect, adminOnly, vendorOnly } = require("../middlewares/authMiddleware");
@@ -20,6 +21,8 @@ router.get("/", protect, getOrders);
 router.put("/update/:orderId", protect, adminOnly, updateOrderStatus);
 router.put("/cancel/:orderId", protect, cancelOrder);
 router.post("/verify-payment", protect, verifyOnlinePayment);
+// 👉 Recent Orders API
+router.get("/orders/recent", getRecentOrders);
 
 router.put(
   "/vendor/orders/:orderId/deliver",

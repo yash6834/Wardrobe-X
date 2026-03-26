@@ -7,7 +7,7 @@ export const ShopContext = createContext();
 const ShopContextProvider = ({ children }) => {
   const [products, setProducts] = useState([]);
   const [cartItems, setCartItems] = useState({});
-const [notifications, setNotifications] = useState([]);
+  const [notifications, setNotifications] = useState([]);
 
   const currency = "₹";
   const delivery_fee = 60;
@@ -25,38 +25,38 @@ const [notifications, setNotifications] = useState([]);
     fetchProducts();
   }, []);
 
-useEffect(() => {
-  const fetchNotifications = async () => {
-    const token = localStorage.getItem("token");
-    if (!token) return;
+  /* ================= NOTIFICATIONS ================= */
+  useEffect(() => {
+    const fetchNotifications = async () => {
+      const token = localStorage.getItem("token");
+      if (!token) return;
 
-    try {
-      const res = await api.get("/api/notifications", {
-        headers: { Authorization: `Bearer ${token}` },
-      });
+      try {
+        const res = await api.get("/api/notifications", {
+          headers: { Authorization: `Bearer ${token}` },
+        });
 
-      setNotifications(res.data || []);
-    } catch (err) {
-      console.error("Notification fetch failed");
-    }
-  };
+        setNotifications(res.data || []);
+      } catch (err) {
+        console.error("Notification fetch failed");
+      }
+    };
 
-  fetchNotifications();
-}, []);
+    fetchNotifications();
+  }, []);
 
-useEffect(() => {
-  notifications.forEach((n) => {
-    if (n.type === "refund" && !n.read) {
-      toast.success(n.message, {
-        position: "top-center",
-        autoClose: 6000,
-      });
+  useEffect(() => {
+    notifications.forEach((n) => {
+      if (n.type === "refund" && !n.read) {
+        toast.success(n.message, {
+          position: "top-center",
+          autoClose: 6000,
+        });
 
-      api.put(`/api/notifications/${n._id}/read`);
-    }
-  });
-}, [notifications]);
-
+        api.put(`/api/notifications/${n._id}/read`);
+      }
+    });
+  }, [notifications]);
 
   /* ================= FETCH CART ================= */
   const fetchCart = async () => {
@@ -66,7 +66,7 @@ useEffect(() => {
       const guestCart =
         JSON.parse(localStorage.getItem("guestCart")) || {};
       setCartItems(guestCart);
-      return;
+      return guestCart; // ✅ RETURN
     }
 
     try {
@@ -85,8 +85,12 @@ useEffect(() => {
       });
 
       setCartItems(items);
+
+      return items; // ✅ RETURN DATA
+
     } catch (err) {
       console.error("Error fetching cart:", err);
+      return {};
     }
   };
 
@@ -100,11 +104,14 @@ useEffect(() => {
         { productId, size, quantity },
         { headers: { Authorization: `Bearer ${token}` } }
       );
-      fetchCart(); // 🔥 auto refresh
+
+      await fetchCart(); // ✅ FIXED (WAIT)
     } else {
       const guestCart =
         JSON.parse(localStorage.getItem("guestCart")) || {};
+
       if (!guestCart[productId]) guestCart[productId] = {};
+
       guestCart[productId][size] =
         (guestCart[productId][size] || 0) + quantity;
 
@@ -125,12 +132,16 @@ useEffect(() => {
         { productId, size, quantity },
         { headers: { Authorization: `Bearer ${token}` } }
       );
-      fetchCart();
+
+      await fetchCart(); // ✅ FIXED (WAIT FOR UPDATE)
     } else {
       const guestCart =
         JSON.parse(localStorage.getItem("guestCart")) || {};
+
       if (!guestCart[productId]) return;
+
       guestCart[productId][size] = quantity;
+
       localStorage.setItem("guestCart", JSON.stringify(guestCart));
       setCartItems(guestCart);
     }
@@ -145,13 +156,16 @@ useEffect(() => {
         headers: { Authorization: `Bearer ${token}` },
         data: { productId, size },
       });
-      fetchCart();
+
+      await fetchCart(); // ✅ FIXED
     } else {
       const guestCart =
         JSON.parse(localStorage.getItem("guestCart")) || {};
+
       if (!guestCart[productId]) return;
 
       delete guestCart[productId][size];
+
       if (Object.keys(guestCart[productId]).length === 0) {
         delete guestCart[productId];
       }
@@ -161,7 +175,7 @@ useEffect(() => {
     }
   };
 
-  /* ================= CLEAR CART (AFTER ORDER) ================= */
+  /* ================= CLEAR CART ================= */
   const clearCart = () => {
     localStorage.removeItem("guestCart");
     setCartItems({});
@@ -172,7 +186,7 @@ useEffect(() => {
     fetchCart();
   }, []);
 
-  /* ================= CART COUNT (AUTO REACTIVE) ================= */
+  /* ================= CART COUNT ================= */
   const cartCount = useMemo(() => {
     return Object.values(cartItems).reduce(
       (acc, sizes) =>

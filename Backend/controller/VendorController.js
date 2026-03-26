@@ -77,7 +77,7 @@ const createVendorProduct = async (req, res) => {
       subCategory: req.body.subCategory,
       description: req.body.description,
       sizes,
-      image: req.files?.map((f) => `/uploads/${f.filename}`) || [], // ✅ SAFE
+      image: req.files?.map((f) => `/uploads/${f.filename}`) || [], 
       vendor: req.user._id,
       isApproved: false,
     });
@@ -217,9 +217,6 @@ const getAllVendors = async (req, res) => {
 /* =========================
    UPDATE ORDER ITEM STATUS
 ========================= */
-/* =========================
-   UPDATE ORDER ITEM STATUS
-========================= */
 const updateOrderItemStatus = async (req, res) => {
   try {
     const { orderId, itemId } = req.params;
@@ -233,7 +230,7 @@ const updateOrderItemStatus = async (req, res) => {
       });
     }
 
-    // 🔒 Vendor can update only own orders
+    //  Vendor can update only own orders
     if (order.vendor.toString() !== req.user._id.toString()) {
       return res.status(403).json({
         success: false,

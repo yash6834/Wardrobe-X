@@ -2,6 +2,7 @@
 
   const Product = require("../models/Product");
   const Order = require("../models/Order");
+  const User = require("../models/Registration");
 
   // Create product
   exports.createProduct = async (req, res) => {
@@ -399,3 +400,75 @@ exports.markReturnCompleted = async (req, res) => {
   }
 };
 
+
+exports.getAdminProfile = async (req, res) => {
+  try {
+    const admin = await User.findById(req.user.id).select("-password");
+
+    if (!admin) {
+      return res.status(404).json({ message: "Admin not found" });
+    }
+
+    res.json(admin);
+  } catch (error) {
+    console.error("GET PROFILE ERROR:", error);
+    res.status(500).json({ message: "Server error" });
+  }
+};
+
+exports.updateAdminProfile = async (req, res) => {
+  try {
+    const { name, email } = req.body;
+
+    const admin = await User.findById(req.user.id);
+
+    if (!admin) {
+      return res.status(404).json({ message: "Admin not found" });
+    }
+
+    admin.name = name || admin.name;
+    admin.email = email || admin.email;
+
+    await admin.save();
+
+    res.json({
+      message: "Profile updated successfully",
+      admin,
+    });
+  } catch (error) {
+    console.error("UPDATE PROFILE ERROR:", error);
+    res.status(500).json({ message: "Server error" });
+  }
+};
+
+const bcrypt = require("bcryptjs");
+
+exports.changeAdminPassword = async (req, res) => {
+  try {
+    const { oldPassword, newPassword } = req.body;
+
+    const admin = await User.findById(req.user.id);
+
+    if (!admin) {
+      return res.status(404).json({ message: "Admin not found" });
+    }
+
+    // ✅ compare old password
+    const isMatch = await bcrypt.compare(oldPassword, admin.password);
+
+    if (!isMatch) {
+      return res.status(400).json({ message: "Old password incorrect" });
+    }
+
+    // ✅ just assign new password (model will hash it)
+    admin.password = newPassword;
+
+    await admin.save();
+
+    res.json({ message: "Password updated successfully" });
+
+  } catch (error) {
+    console.error("PASSWORD ERROR:", error);
+    res.status(500).json({ message: "Server error" });
+  }
+};

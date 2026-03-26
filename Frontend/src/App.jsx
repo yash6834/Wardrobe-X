@@ -4,7 +4,7 @@ import { Routes, Route } from "react-router-dom";
 import { ToastContainer } from "react-toastify";
 
 import CurrencyProvider from "./context/Currency.jsx";
-
+import ProtectedRoute from "./Routes/ProtectedRoute.jsx";
 
 /* ===== Public Pages ===== */
 import Home from "./pages/Client/Home.jsx";
@@ -37,9 +37,9 @@ import Vendor from "./pages/Admin/Vendors.jsx";
 import PendingApprovals from "./pages/Admin/PendingApprovals.jsx";
 import Revenue from "./pages/Admin/Revenue.jsx";
 import Membership from "./pages/Admin/Membership.jsx";
-import Froud from "./pages/Admin/Froud.jsx"
+import Froud from "./pages/Admin/Froud.jsx";
 
-/* ===== CMS Pages (NEW) ===== */
+/* ===== CMS Pages ===== */
 import Banners from "./pages/Admin/CMS/Banner.jsx";
 
 /* ===== Vendor Pages ===== */
@@ -51,12 +51,14 @@ import VendorAnalytics from "./pages/Vendor/Analytics.jsx";
 import VendorAddProduct from "./pages/Vendor/AddProduct.jsx";
 import VendorEditProduct from "./pages/Vendor/VendorEditProduct.jsx";
 import VendorReturns from "./pages/Vendor/Return.jsx";
+import Profile from "./pages/Admin/Profile.jsx";
 
 const App = () => {
   return (
     <>
       <ToastContainer />
       <CurrencyProvider />
+
       <Routes>
 
         {/* ================= PUBLIC ROUTES ================= */}
@@ -65,21 +67,57 @@ const App = () => {
         <Route path="/about" element={<MainLayout><About /></MainLayout>} />
         <Route path="/contact" element={<MainLayout><Contact /></MainLayout>} />
         <Route path="/product/:productId" element={<MainLayout><Product /></MainLayout>} />
-        <Route path="/placeorder" element={<MainLayout><Placeorder /></MainLayout>} />
-        <Route path="/login" element={<MainLayout><Login /></MainLayout>} />
+        {/* <Route path="/login" element={<MainLayout><Login /></MainLayout>} /> */}
+        <Route
+  path="/login"
+  element={
+    <ProtectedRoute redirectIfLoggedIn={true}>
+      <MainLayout><Login /></MainLayout>
+    </ProtectedRoute>
+  }
+/>
         <Route path="/registration" element={<MainLayout><UserRegis /></MainLayout>} />
         <Route path="/cart" element={<MainLayout><Cart /></MainLayout>} />
-        <Route path="/myorders" element={<MainLayout><MyOrders /></MainLayout>} />
-        <Route path="/myprofile" element={<MainLayout><MyProfile /></MainLayout>} />
         <Route path="/forgot-password" element={<MainLayout><ForgotPassword /></MainLayout>} />
         <Route path="/reset-password/:token" element={<MainLayout><ResetPassword /></MainLayout>} />
 
-        {/* ================= RETURNS (USER) ================= */}
-        <Route path="/return/:orderId" element={<MainLayout><CreateReturn /></MainLayout>} />
-        <Route path="/my-returns" element={<MainLayout><MyReturns /></MainLayout>} />
+        {/* ================= USER PROTECTED ================= */}
+        <Route path="/placeorder" element={
+          <ProtectedRoute role="user">
+            <MainLayout><Placeorder /></MainLayout>
+          </ProtectedRoute>
+        } />
 
-        {/* ================= ADMIN ROUTES ================= */}
-        <Route path="/admin" element={<AdminLayout />}>
+        <Route path="/myorders" element={
+          <ProtectedRoute role="user">
+            <MainLayout><MyOrders /></MainLayout>
+          </ProtectedRoute>
+        } />
+
+        <Route path="/myprofile" element={
+          <ProtectedRoute role="user">
+            <MainLayout><MyProfile /></MainLayout>
+          </ProtectedRoute>
+        } />
+
+        <Route path="/return/:orderId" element={
+          <ProtectedRoute role="user">
+            <MainLayout><CreateReturn /></MainLayout>
+          </ProtectedRoute>
+        } />
+
+        <Route path="/my-returns" element={
+          <ProtectedRoute role="user">
+            <MainLayout><MyReturns /></MainLayout>
+          </ProtectedRoute>
+        } />
+
+        {/* ================= ADMIN ================= */}
+        <Route path="/admin" element={
+          <ProtectedRoute role="admin">
+            <AdminLayout />
+          </ProtectedRoute>
+        }>
 
           <Route index element={<Dashboard />} />
           <Route path="dashboard" element={<Dashboard />} />
@@ -92,15 +130,17 @@ const App = () => {
           <Route path="membership-plans" element={<Membership />} />
           <Route path="returns" element={<ReturnsAdmin />} />
           <Route path="froud" element={<Froud />} />
-          
-
-          {/* ===== CMS ROUTES (NEW) ===== */}
           <Route path="cms/banners" element={<Banners />} />
+          <Route path="profile" element={<Profile />} />
 
         </Route>
 
-        {/* ================= VENDOR ROUTES ================= */}
-        <Route path="/seller" element={<VendorLayout />}>
+        {/* ================= VENDOR ================= */}
+        <Route path="/seller" element={
+          <ProtectedRoute role="seller">
+            <VendorLayout />
+          </ProtectedRoute>
+        }>
 
           <Route index element={<VendorDashboard />} />
           <Route path="dashboard" element={<VendorDashboard />} />
@@ -113,10 +153,6 @@ const App = () => {
           <Route path="returns" element={<VendorReturns />} />
 
         </Route>
-
-        
-
-
 
       </Routes>
     </>
