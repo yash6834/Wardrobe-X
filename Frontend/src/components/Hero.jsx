@@ -187,9 +187,8 @@ const Hero = () => {
             <button
               key={i}
               onClick={() => setCurrent(i)}
-              className={`h-1.5 rounded-full transition-all duration-500 ${
-                current === i ? "w-10 bg-white" : "w-3 bg-white/40"
-              }`}
+              className={`h-1.5 rounded-full transition-all duration-500 ${current === i ? "w-10 bg-white" : "w-3 bg-white/40"
+                }`}
             />
           ))}
         </div>
@@ -198,7 +197,7 @@ const Hero = () => {
       {/* ================= PERSONALIZED SECTION ================= */}
 
       {isLoggedIn && (
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5 mt-[-70px] md:mt-[-140px] relative z-10 px-2">
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 mt-[-70px] md:mt-[-300px] relative z-10 px-2">
 
           {/* RECENTLY VIEWED */}
 
@@ -207,31 +206,31 @@ const Hero = () => {
               Recent views
             </h3>
 
-        <div className="grid grid-cols-2 gap-2 h-[180px]">
+            <div className="grid grid-cols-2 gap-2 h-[180px]">
 
-{[...new Map(recentProducts.map(p => [p._id, p])).values()]
-  .slice(0,2)
-  .map((product) => (
+              {[...new Map(recentProducts.map(p => [p._id, p])).values()]
+                .slice(0, 2)
+                .map((product) => (
 
-    <div key={product._id} className="group overflow-hidden rounded-xl bg-zinc-50">
+                  <div key={product._id} className="group overflow-hidden rounded-xl bg-zinc-50">
 
-      <img
-        src={`${BASE_URL}${product.image[0]}`}
-        className="w-full h-full object-cover cursor-pointer transition-transform duration-500 group-hover:scale-110"
-        onClick={() => navigate(`/product/${product._id}`)}
-      />
+                    <img
+                      src={`${BASE_URL}${product.image[0]}`}
+                      className="w-full h-full object-cover cursor-pointer transition-transform duration-500 group-hover:scale-110"
+                      onClick={() => navigate(`/product/${product._id}`)}
+                    />
 
-    </div>
+                  </div>
 
-))}
+                ))}
 
-</div>
+            </div>
 
             <button
-              onClick={()=>navigate("/collection")}
+              onClick={() => navigate("/collection")}
               className="mt-3 text-xs font-black text-indigo-600 uppercase tracking-widest flex items-center gap-2"
             >
-              Continue <ArrowRight size={14}/>
+              Continue <ArrowRight size={14} />
             </button>
           </div>
 
@@ -244,22 +243,22 @@ const Hero = () => {
             </h3>
 
             <div className="grid grid-cols-2 gap-2 h-[180px]">
-              {recommendedProducts.slice(0,4).map((product)=>(
+              {recommendedProducts.slice(0, 4).map((product) => (
                 <div key={product._id} className="overflow-hidden rounded-xl">
                   <img
                     src={`${BASE_URL}${product.image[0]}`}
                     className="w-full h-full object-cover cursor-pointer"
-                    onClick={()=>navigate(`/product/${product._id}`)}
+                    onClick={() => navigate(`/product/${product._id}`)}
                   />
                 </div>
               ))}
             </div>
 
             <button
-              onClick={()=>navigate("/collection")}
+              onClick={() => navigate("/collection")}
               className="mt-3 text-xs font-black text-indigo-600 uppercase tracking-widest flex items-center gap-2"
             >
-              Explore <ArrowRight size={14}/>
+              Explore <ArrowRight size={14} />
             </button>
           </div>
 
@@ -268,10 +267,10 @@ const Hero = () => {
 
           <div
             className="bg-zinc-900 rounded-3xl p-7 shadow-2xl text-white cursor-pointer relative overflow-hidden"
-            onClick={()=>navigate("/collection")}
+            onClick={() => navigate("/collection")}
           >
             <div className="bg-indigo-600 w-12 h-12 rounded-2xl flex items-center justify-center mb-6">
-              <Zap size={22} fill="white"/>
+              <Zap size={22} fill="white" />
             </div>
 
             <h3 className="font-black text-3xl mb-2">
@@ -283,7 +282,7 @@ const Hero = () => {
             </p>
 
             <span className="inline-flex items-center gap-2 bg-white text-black px-5 py-3 rounded-2xl text-[11px] font-black uppercase">
-              Shop Now <ArrowRight size={14}/>
+              Shop Now <ArrowRight size={14} />
             </span>
           </div>
 

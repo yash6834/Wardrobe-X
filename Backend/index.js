@@ -26,6 +26,7 @@ const recommendationRoutes = require("./routes/Recomendation");
 const paymentRoutes = require("./routes/Payment");
 const fraudRoutes = require("./routes/Froud");
 const currencyRoutes = require( "./routes/CurrencyRoutes");
+const { router: pushRoutes } = require("./routes/pushRoutes");
 
 
 
@@ -98,6 +99,8 @@ app.use("/api", fraudRoutes);
 
 
 app.use("/api/currency", currencyRoutes);
+
+app.use("/api", pushRoutes);
 
 /* ================= HEALTH CHECK ================= */
 app.get("/", (req, res) => {

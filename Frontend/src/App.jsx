@@ -1,10 +1,11 @@
-import React from "react";
+import React, { useEffect } from "react";
 import "./i18n";
 import { Routes, Route } from "react-router-dom";
 import { ToastContainer } from "react-toastify";
 
 import CurrencyProvider from "./context/Currency.jsx";
 import ProtectedRoute from "./Routes/ProtectedRoute.jsx";
+import { subscribeUserToPush } from "./utils/pushNotification";
 
 /* ===== Public Pages ===== */
 import Home from "./pages/Client/Home.jsx";
@@ -22,6 +23,8 @@ import ForgotPassword from "./pages/Client/ForgotPassword";
 import ResetPassword from "./pages/Client/ResetPassword";
 import CreateReturn from "./components/CreateReturn.jsx";
 import MyReturns from "./pages/Client/MyReturns.jsx";
+import PrivacyPolicy from "./components/Privacy&Policy.jsx";
+import Terms from "./components/Terms&Conditions.jsx";
 
 /* ===== Layouts ===== */
 import MainLayout from "./mainLayout";
@@ -54,6 +57,12 @@ import VendorReturns from "./pages/Vendor/Return.jsx";
 import Profile from "./pages/Admin/Profile.jsx";
 
 const App = () => {
+
+  // 🔔 PUSH NOTIFICATION INIT
+  useEffect(() => {
+    subscribeUserToPush();
+  }, []);
+
   return (
     <>
       <ToastContainer />
@@ -67,15 +76,18 @@ const App = () => {
         <Route path="/about" element={<MainLayout><About /></MainLayout>} />
         <Route path="/contact" element={<MainLayout><Contact /></MainLayout>} />
         <Route path="/product/:productId" element={<MainLayout><Product /></MainLayout>} />
-        {/* <Route path="/login" element={<MainLayout><Login /></MainLayout>} /> */}
+          <Route path="/privacy&policy" element={<PrivacyPolicy />} />
+          <Route path="/terms&conditions" element={<Terms />} />
+
         <Route
-  path="/login"
-  element={
-    <ProtectedRoute redirectIfLoggedIn={true}>
-      <MainLayout><Login /></MainLayout>
-    </ProtectedRoute>
-  }
-/>
+          path="/login"
+          element={
+            <ProtectedRoute redirectIfLoggedIn={true}>
+              <MainLayout><Login /></MainLayout>
+            </ProtectedRoute>
+          }
+        />
+
         <Route path="/registration" element={<MainLayout><UserRegis /></MainLayout>} />
         <Route path="/cart" element={<MainLayout><Cart /></MainLayout>} />
         <Route path="/forgot-password" element={<MainLayout><ForgotPassword /></MainLayout>} />

@@ -1,0 +1,41 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>No Internet</title>
+  <style>
+    body {
+      margin: 0;
+      font-family: Arial;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      height: 100vh;
+      background: linear-gradient(135deg, #667eea, #764ba2);
+      color: white;
+      text-align: center;
+    }
+    .box {
+      background: rgba(0,0,0,0.3);
+      padding: 30px;
+      border-radius: 10px;
+    }
+    button {
+      margin-top: 15px;
+      padding: 10px 20px;
+      border: none;
+      background: white;
+      color: #333;
+      border-radius: 5px;
+      cursor: pointer;
+    }
+  </style>
+</head>
+<body>
+  <div class="box">
+    <h1> No Internet</h1>
+    <p>You are offline. Please reconnect.</p>
+    <button onclick="location.reload()">Retry</button>
+  </div>
+</body>
+</html>

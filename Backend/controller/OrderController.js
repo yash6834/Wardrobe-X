@@ -4,6 +4,8 @@ const User = require("../models/Registration");
 const Razorpay = require("razorpay");
 const crypto = require("crypto");
 const FraudLog = require("../models/FroudLog");
+const sendPushNotification = require("../Utils/pushNotification");
+
 
 const COMMISSION_RATE = 0.1;
 
@@ -518,6 +520,27 @@ const getRecentOrders = async (req, res) => {
   }
 };
 
+const placeOrder = async (req, res) => {
+  try {
+    // 🛒 your order logic
+    const order = await Order.create(req.body);
+
+    // 🔔 send notification
+    const subscription = req.user.subscription; // from DB
+    if (subscription) {
+      await sendPushNotification(
+        subscription,
+        "Your order placed successfully 🎉"
+      );
+    }
+
+    res.json({ success: true, order });
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ error: "Order failed" });
+  }
+};
+
 module.exports = {
   createOrder,
   verifyOnlinePayment,
@@ -528,4 +551,5 @@ module.exports = {
   getOrderById,
   checkFraudRisk,
   getRecentOrders,
+  placeOrder
 };

@@ -2,7 +2,7 @@ import React from "react";
 import { useTranslation } from "react-i18next";
 import Title from "../../components/Title";
 import { assets } from "../../assets/frontend_assets/assets";
-import PolicySection from "../../components/Policy";
+import PolicySection from "../../components/PolicySection";
 
 const Contact = () => {
 

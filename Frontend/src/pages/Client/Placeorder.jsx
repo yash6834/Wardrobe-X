@@ -5,6 +5,8 @@ import { validateCheckoutForm } from "../../validation";
 import { ShieldCheck, Truck, CreditCard, Banknote, CheckCircle2, Phone, Loader2, Lock, ChevronRight, MapPin, ShoppingBag } from "lucide-react";
 import api from "../../api/api";
 import { CurrencyContext } from "../../context/Currency";
+import { dbPromise } from "../../db/db";
+
 
 const Checkout = () => {
   const { delivery_fee, cartItems, products, fetchCart } = useContext(ShopContext);
@@ -26,6 +28,21 @@ const Checkout = () => {
   const [convertedShippingFee, setConvertedShippingFee] = useState(delivery_fee);
 
   const currencySymbols = { INR: "₹", USD: "$", EUR: "€" };
+
+  const [isOnline, setIsOnline] = useState(navigator.onLine);
+
+  useEffect(() => {
+    const goOnline = () => setIsOnline(true);
+    const goOffline = () => setIsOnline(false);
+
+    window.addEventListener("online", goOnline);
+    window.addEventListener("offline", goOffline);
+
+    return () => {
+      window.removeEventListener("online", goOnline);
+      window.removeEventListener("offline", goOffline);
+    };
+  }, []);
 
   /* ================= AUTO REFRESH LOGIC ================= */
 
@@ -155,6 +172,10 @@ const Checkout = () => {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
+    if (!isOnline) {
+      alert("You are offline. Please connect to internet to place order 🚫");
+      return;
+    }
 
     const { isValid, errors } = validateCheckoutForm(formData);
     setErrors(errors);
@@ -213,6 +234,11 @@ const Checkout = () => {
   };
 
   const confirmCODOrder = async () => {
+
+    if (!navigator.onLine) {
+      alert("You are offline. Cannot place order 🚫");
+      return;
+    }
     try {
       setPlacingOrder(true);
 
@@ -257,18 +283,18 @@ const Checkout = () => {
 
   return (
     <main>
-         	      <div className="max-w-[1200px] mx-auto px-6">
-         
+      <div className="max-w-[1200px] mx-auto px-6">
+
         {/* Breadcrumb Header - Hidden on Small Mobile */}
         <div className="hidden sm:flex items-center gap-2 mb-6 text-xs font-medium text-gray-400">
           <span>Cart</span> <ChevronRight size={12} /> <span className="text-black">Checkout</span> <ChevronRight size={12} /> <span className="opacity-50">Payment</span>
         </div>
 
         <form onSubmit={handleSubmit} className="flex flex-col lg:flex-row gap-6 lg:gap-10 items-start">
-          
+
           {/* LEFT: INFORMATION PANELS */}
           <div className="w-full lg:flex-[1.8] flex flex-col gap-6 order-2 lg:order-1">
-            
+
             {/* Shipping Card */}
             <div className="bg-white p-5 md:p-8 rounded-[2rem] border border-gray-100 shadow-sm">
               <div className="flex items-center gap-3 mb-6">
@@ -313,11 +339,11 @@ const Checkout = () => {
                 <div className="bg-black text-white p-2.5 rounded-xl shadow-lg shadow-black/10"><CreditCard size={18} /></div>
                 <h3 className="text-lg font-bold tracking-tight">Payment Method</h3>
               </div>
-              
+
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                <button 
-                  type="button" 
-                  onClick={() => setFormData({ ...formData, paymentMethod: "cod" })} 
+                <button
+                  type="button"
+                  onClick={() => setFormData({ ...formData, paymentMethod: "cod" })}
                   className={`group flex items-center p-4 md:p-5 border-2 rounded-2xl transition-all ${formData.paymentMethod === 'cod' ? 'border-black bg-black/[0.02]' : 'border-gray-50 hover:border-gray-200'}`}
                 >
                   <div className={`p-3 rounded-xl mr-4 transition-colors ${formData.paymentMethod === 'cod' ? 'bg-black text-white' : 'bg-gray-100 text-gray-400'}`}>
@@ -329,9 +355,9 @@ const Checkout = () => {
                   </div>
                 </button>
 
-                <button 
-                  type="button" 
-                  onClick={() => setFormData({ ...formData, paymentMethod: "card" })} 
+                <button
+                  type="button"
+                  onClick={() => setFormData({ ...formData, paymentMethod: "card" })}
                   className={`group flex items-center p-4 md:p-5 border-2 rounded-2xl transition-all ${formData.paymentMethod === 'card' ? 'border-black bg-black/[0.02]' : 'border-gray-50 hover:border-gray-200'}`}
                 >
                   <div className={`p-3 rounded-xl mr-4 transition-colors ${formData.paymentMethod === 'card' ? 'bg-black text-white' : 'bg-gray-100 text-gray-400'}`}>
@@ -388,13 +414,24 @@ const Checkout = () => {
                   </div>
                 </div>
 
-                <button 
-                  type="submit" 
-                  className="w-full bg-slate-50 text-black py-4 md:py-5 rounded-2xl font-black text-xs md:text-sm uppercase tracking-widest hover:bg-emerald-400 transition-all active:scale-[0.97] shadow-lg flex items-center justify-center gap-3"
+
+                {!isOnline && (
+                  <p className="text-red-500 text-sm text-center mb-3">
+                    ⚠️ You are offline. Orders are disabled.
+                  </p>
+                )}
+                <button
+                  type="submit"
+                  disabled={!isOnline}
+                  className={`w-full py-4 rounded-2xl font-black text-xs md:text-sm uppercase tracking-widest flex items-center justify-center gap-3
+    ${!isOnline
+                      ? "bg-gray-400 cursor-not-allowed text-white"
+                      : "bg-slate-50 text-black hover:bg-emerald-400"}
+  `}
                 >
                   Place Order <Lock size={16} />
                 </button>
-                
+
                 <div className="mt-6 flex flex-wrap justify-center gap-4 opacity-20 grayscale transition-all hover:opacity-40">
                   <span className="text-[8px] font-bold border border-white px-1.5 rounded uppercase">Visa</span>
                   <span className="text-[8px] font-bold border border-white px-1.5 rounded uppercase">Mastercard</span>
@@ -431,14 +468,14 @@ const Checkout = () => {
             <h3 className="text-xl font-bold mb-2 tracking-tight">Confirm COD Order?</h3>
             <p className="text-gray-500 text-sm mb-8 leading-relaxed">Pay <span className="text-black font-bold">{currencySymbols[currency]}{total.toFixed(2)}</span> at the time of delivery.</p>
             <div className="flex flex-col gap-3">
-              <button 
-                onClick={confirmCODOrder} 
-                disabled={placingOrder} 
-                className="w-full bg-black text-white py-4.5 rounded-2xl font-bold flex items-center justify-center gap-2 active:scale-95 transition-all"
+              <button
+                onClick={confirmCODOrder}
+                disabled={placingOrder}
+                className="w-full bg-black text-white py-4 rounded-2xl font-bold flex items-center justify-center gap-2 active:scale-95 transition-all"
               >
-                {placingOrder ? <Loader2 className="animate-spin" size={18} /> : "Yes, Place Order"}
+                {placingOrder ? <Loader2 className="animate-spin" size={20} /> : "Yes, Place Order"}
               </button>
-              <button onClick={() => setShowCODModal(false)} className="text-gray-400 text-xs font-bold uppercase tracking-widest py-2 hover:text-black transition-colors">Go Back</button>
+              <button onClick={() => setShowCODModal(false)} className="text-gray-400 text-xs font-bold uppercase tracking-widest py-4 hover:text-black transition-colors">Go Back</button>
             </div>
           </div>
         </div>

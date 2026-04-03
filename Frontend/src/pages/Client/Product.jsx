@@ -43,31 +43,59 @@ const Product = () => {
 
   /* ================= FETCH PRODUCT ================= */
 
-  useEffect(() => {
+useEffect(() => {
+  // 🔥 RESET OLD PRODUCT (VERY IMPORTANT)
+  setProductData(null);
+  setSelectedImage(null);
 
-    const fetchProduct = async () => {
+  const fetchProduct = async () => {
+    try {
+      const res = await api.get(`/api/product/${productId}`);
 
-      try {
+      if (!res.data?.success) throw new Error("Invalid product");
 
-        const res = await api.get(`/api/product/${productId}`);
+      setProductData(res.data);
 
-        if (!res.data?.success) throw new Error("Invalid product");
-
-        setProductData(res.data);
-
-        if (res.data.image?.length > 0) {
-          setSelectedImage(res.data.image[0]);
-        }
-
-      } catch (err) {
-        toast.error("Failed to fetch product");
+      if (res.data.image?.length > 0) {
+        setSelectedImage(res.data.image[0]);
       }
 
-    };
+    } catch (err) {
+      console.log("🔴 Offline → loading from DB");
 
-    fetchProduct();
+      try {
+        const db = await dbPromise;
+        const allProducts = await db.getAll("products");
 
-  }, [productId]);
+        // FIX: string comparison
+        const found = allProducts.find(
+          (p) => String(p._id) === String(productId)
+        );
+
+        if (found) {
+          setProductData(found);
+
+          if (found.image?.length > 0) {
+            setSelectedImage(found.image[0]);
+          }
+        } else {
+          console.log("❌ Product not found offline");
+
+          // VERY IMPORTANT (prevents old product showing)
+          setProductData(null);
+          setSelectedImage(null);
+        }
+
+      } catch (e) {
+        console.error("DB error", e);
+        setProductData(null);
+        setSelectedImage(null);
+      }
+    }
+  };
+
+  fetchProduct();
+}, [productId]);
 
   /* ================= TRACK VIEW ================= */
 

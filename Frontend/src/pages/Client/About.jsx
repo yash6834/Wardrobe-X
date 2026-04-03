@@ -2,7 +2,7 @@ import React from "react";
 import { useTranslation } from "react-i18next";
 import { assets } from "../../assets/frontend_assets/assets";
 import { Link } from "react-router-dom";
-import PolicySection from "../../components/Policy";
+import PolicySection from "../../components/PolicySection";
 
 const About = () => {
 

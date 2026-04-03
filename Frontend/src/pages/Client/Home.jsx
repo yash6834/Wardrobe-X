@@ -2,7 +2,7 @@ import React from 'react'
 import Navbar from '../../components/Navbar';
 import Hero from '../../components/Hero';
 import LatestCollection from '../../components/LatestCollection';
-import PolicySection from '../../components/Policy';
+import PolicySection from '../../components/PolicySection';
 const home = () => {
   return (
     <main className="pt-24 px-5">
