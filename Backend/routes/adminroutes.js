@@ -9,6 +9,9 @@ const {
   getAdminProfile,
   updateAdminProfile,
   changeAdminPassword, // ✅ ADD THIS
+  deactivateVendor,
+  suspendVendor,
+  reactivateVendor,
 } = require("../controller/AdminController");
 const { getRecentOrders } = require("../controller/OrderController");
 
@@ -41,6 +44,10 @@ router.put(
 router.get("/profile", protect, adminOnly, getAdminProfile);
 router.put("/profile", protect, adminOnly, updateAdminProfile);
 router.put("/change-password", protect, adminOnly, changeAdminPassword);
+
+router.put("/vendor/:vendorId/deactivate", protect, adminOnly, deactivateVendor);
+router.put("/vendor/:vendorId/suspend", protect, adminOnly, suspendVendor);
+router.put("/vendor/:vendorId/reactivate", protect, adminOnly, reactivateVendor);
 
 // 👉 Recent Orders API
 router.get("/orders/recent", getRecentOrders);

@@ -59,9 +59,27 @@ const regisSchema = new mongoose.Schema(
       default: false,
     },
 
+    // ⚡ Active flag (quick check)
     isActive: {
       type: Boolean,
       default: true,
+    },
+
+    // 🚦 Vendor status system (NEW 🔥)
+    status: {
+      type: String,
+      enum: ["active", "suspended", "deactivated"],
+      default: "active",
+    },
+
+    deletedAt: {
+      type: Date,
+      default: null,
+    },
+
+    suspendedUntil: {
+      type: Date,
+      default: null,
     },
 
     // 💰 Commission & wallet
@@ -157,9 +175,10 @@ regisSchema.methods.comparePassword = async function (plainPassword) {
 };
 
 //
-// ⚡ Index for faster membership checks
+// ⚡ Indexes (performance boost 🔥)
 //
 regisSchema.index({ "memberships.isActive": 1 });
+regisSchema.index({ status: 1 });
 
 //
 // 📦 Model export

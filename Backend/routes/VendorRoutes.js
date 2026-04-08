@@ -13,7 +13,9 @@ const {
   getVendorOrders,
   updateOrderItemStatus,
   getAllVendors,
-  getVendorDashboardStats
+  getVendorDashboardStats,
+ 
+
 } = require("../controller/VendorController");
 
 /* ================= MULTER ================= */
@@ -23,6 +25,7 @@ const storage = multer.diskStorage({
     cb(null, Date.now() + "-" + file.originalname);
   },
 });
+
 const upload = multer({ storage });
 
 /* ================= PROFILE ================= */
@@ -42,7 +45,7 @@ router.post(
 router.put(
   "/products/:id",
   protect,
-  upload.array("image", 5), // 🔴 FIX
+  upload.array("image", 5),
   updateVendorProduct
 );
 
@@ -53,9 +56,13 @@ router.get("/orders", protect, getVendorOrders);
 router.put("/orders/:orderId/item/:itemId", protect, updateOrderItemStatus);
 
 /* ================= ADMIN ================= */
+
+// 🔹 Get all vendors
 router.get("/admin/vendors", protect, getAllVendors);
 
-router.get("/dashboard", protect, getVendorDashboardStats);
 
+
+/* ================= DASHBOARD ================= */
+router.get("/dashboard", protect, getVendorDashboardStats);
 
 module.exports = router;

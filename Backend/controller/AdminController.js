@@ -120,7 +120,6 @@
     }
   };
 
-  /* ================= ADMIN FINAL DECISION ================= */
   exports.adminDecision = async (req, res) => {
     try {
       const { action } = req.body; // approved / rejected
@@ -472,3 +471,94 @@ exports.changeAdminPassword = async (req, res) => {
     res.status(500).json({ message: "Server error" });
   }
 };
+
+/* =========================
+   DEACTIVATE VENDOR (ADMIN)
+========================= */
+exports.deactivateVendor = async (req, res) => {
+  try {
+    if (req.user.role !== "admin") {
+      return res.status(403).json({ message: "Access denied" });
+    }
+
+const vendor = await User.findById(req.params.vendorId);
+    if (!vendor) {
+      return res.status(404).json({ message: "Vendor not found" });
+    }
+
+    vendor.status = "deactivated";
+    vendor.isActive = false;
+    vendor.deletedAt = new Date();
+
+    await vendor.save();
+
+    res.json({
+      success: true,
+      message: "Vendor deactivated successfully",
+    });
+  } catch (error) {
+    console.error("DEACTIVATE VENDOR ERROR:", error);
+    res.status(500).json({ message: "Failed to deactivate vendor" });
+  }
+};
+
+
+/* SUSPEND VENDOR (ADMIN)*/
+exports.suspendVendor = async (req, res) => {
+  try {
+    if (req.user.role !== "admin") {
+      return res.status(403).json({ message: "Access denied" });
+    }
+
+    const vendor = await User.findById(req.params.vendorId);
+
+    if (!vendor) {
+      return res.status(404).json({ message: "Vendor not found" });
+    }
+
+    vendor.status = "suspended";
+    vendor.isActive = false;
+
+    await vendor.save();
+
+    res.json({
+      success: true,
+      message: "Vendor suspended successfully",
+    });
+  } catch (error) {
+    console.error("SUSPEND VENDOR ERROR:", error);
+    res.status(500).json({ message: "Failed to suspend vendor" });
+  }
+};
+
+
+/*REACTIVATE VENDOR */
+exports.reactivateVendor = async (req, res) => {
+  try {
+    if (req.user.role !== "admin") {
+      return res.status(403).json({ message: "Access denied" });
+    }
+
+    const vendor = await User.findById(req.params.vendorId);
+
+    if (!vendor) {
+      return res.status(404).json({ message: "Vendor not found" });
+    }
+
+    vendor.status = "active";
+    vendor.isActive = true;
+    vendor.deletedAt = null;
+    vendor.suspendedUntil = null;
+
+    await vendor.save();
+
+    res.json({
+      success: true,
+      message: "Vendor reactivated successfully",
+    });
+  } catch (error) {
+    console.error("REACTIVATE VENDOR ERROR:", error);
+    res.status(500).json({ message: "Failed to reactivate vendor" });
+  }
+};
+

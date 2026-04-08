@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useContext, useRef } from "react";
-import { Link, NavLink } from "react-router-dom";
+import { Link, NavLink, useNavigate } from "react-router-dom";
 import { useTranslation } from "react-i18next";
 import i18n from "i18next";
 import logo from "../assets/Images/Men.png";
@@ -9,13 +9,15 @@ import { CurrencyContext } from "../context/Currency";
 
 const Navbar = () => {
   const { t } = useTranslation();
+  const navigate = useNavigate();
 
-  const [isOpen, setIsOpen] = useState(false); // Mobile Menu State
+  const [isOpen, setIsOpen] = useState(false);
   const [profileOpen, setProfileOpen] = useState(false);
   const [scrolled, setScrolled] = useState(false);
 
   const profileRef = useRef(null);
   const mobileMenuRef = useRef(null);
+  const hamburgerRef = useRef(null); // Added ref for safer click-outside detection
 
   const { cartCount } = useContext(ShopContext);
   const { currency, setCurrency } = useContext(CurrencyContext);
@@ -40,17 +42,31 @@ const Navbar = () => {
       setRole(localStorage.getItem("userRole"));
     };
 
+    // 'storage' only fires on cross-tab changes. 
+    // 'authStateChanged' is a custom event to handle same-tab login/logout updates.
     window.addEventListener("storage", updateLogin);
-    return () => window.removeEventListener("storage", updateLogin);
+    window.addEventListener("authStateChanged", updateLogin); 
+
+    return () => {
+      window.removeEventListener("storage", updateLogin);
+      window.removeEventListener("authStateChanged", updateLogin);
+    };
   }, []);
 
   /* ================= Close Dropdowns on Click Outside ================= */
   useEffect(() => {
     const handleClickOutside = (event) => {
+      // Close profile dropdown
       if (profileRef.current && !profileRef.current.contains(event.target)) {
         setProfileOpen(false);
       }
-      if (mobileMenuRef.current && !mobileMenuRef.current.contains(event.target) && !event.target.closest('#hamburger')) {
+      // Close mobile menu (excluding clicks on the hamburger button itself)
+      if (
+        mobileMenuRef.current &&
+        !mobileMenuRef.current.contains(event.target) &&
+        hamburgerRef.current &&
+        !hamburgerRef.current.contains(event.target)
+      ) {
         setIsOpen(false);
       }
     };
@@ -67,8 +83,13 @@ const Navbar = () => {
 
     setIsLoggedIn(false);
     setProfileOpen(false);
+    setRole(null); // Clear the role state
 
-    window.location.href = "/";
+    // Trigger custom event for other components on the same tab
+    window.dispatchEvent(new Event("authStateChanged"));
+
+    // Use React Router navigation instead of a full page reload
+    navigate("/"); 
   };
 
   const menuItems = [
@@ -90,8 +111,9 @@ const Navbar = () => {
         <div className="max-w-7xl mx-auto px-6 lg:px-12 flex items-center justify-between">
           
           {/* Mobile Hamburger Icon */}
-          <button 
-            id="hamburger"
+          <button
+            ref={hamburgerRef}
+            aria-label="Toggle Menu"
             className="md:hidden text-gray-700 hover:text-black transition-colors"
             onClick={() => setIsOpen(!isOpen)}
           >
@@ -163,32 +185,52 @@ const Navbar = () => {
               />
 
               {/* Profile Dropdown */}
-              <div 
+              <div
                 className={`absolute right-0 mt-4 w-56 bg-white border border-gray-100 shadow-xl rounded-xl overflow-hidden transition-all duration-200 transform origin-top-right ${
                   profileOpen ? "scale-100 opacity-100" : "scale-95 opacity-0 pointer-events-none"
                 }`}
               >
                 {!isLoggedIn ? (
-                  <Link to="/login" className="block px-5 py-3 text-sm text-gray-700 hover:bg-gray-50 hover:text-blue-600 transition-colors">
+                  <Link 
+                    to="/login" 
+                    onClick={() => setProfileOpen(false)}
+                    className="block px-5 py-3 text-sm text-gray-700 hover:bg-gray-50 hover:text-blue-600 transition-colors"
+                  >
                     {t("login_register")}
                   </Link>
                 ) : (
                   <div className="py-2">
-                    <Link to="/myprofile" className="block px-5 py-2.5 text-sm text-gray-700 hover:bg-gray-50 hover:text-blue-600 transition-colors">
+                    <Link 
+                      to="/myprofile" 
+                      onClick={() => setProfileOpen(false)}
+                      className="block px-5 py-2.5 text-sm text-gray-700 hover:bg-gray-50 hover:text-blue-600 transition-colors"
+                    >
                       {t("my_profile")}
                     </Link>
-                    <Link to="/myorders" className="block px-5 py-2.5 text-sm text-gray-700 hover:bg-gray-50 hover:text-blue-600 transition-colors">
+                    <Link 
+                      to="/myorders" 
+                      onClick={() => setProfileOpen(false)}
+                      className="block px-5 py-2.5 text-sm text-gray-700 hover:bg-gray-50 hover:text-blue-600 transition-colors"
+                    >
                       {t("orders")}
                     </Link>
 
                     {role === "admin" && (
-                      <Link to="/admin" className="block px-5 py-2.5 text-sm font-medium text-blue-600 hover:bg-blue-50 transition-colors">
+                      <Link 
+                        to="/admin" 
+                        onClick={() => setProfileOpen(false)}
+                        className="block px-5 py-2.5 text-sm font-medium text-blue-600 hover:bg-blue-50 transition-colors"
+                      >
                         Admin Dashboard
                       </Link>
                     )}
 
                     {role === "seller" && (
-                      <Link to="/seller" className="block px-5 py-2.5 text-sm font-medium text-blue-600 hover:bg-blue-50 transition-colors">
+                      <Link 
+                        to="/seller" 
+                        onClick={() => setProfileOpen(false)}
+                        className="block px-5 py-2.5 text-sm font-medium text-blue-600 hover:bg-blue-50 transition-colors"
+                      >
                         Vendor Dashboard
                       </Link>
                     )}
@@ -223,7 +265,7 @@ const Navbar = () => {
       </header>
 
       {/* Mobile Menu Slide-out Overlay */}
-      <div 
+      <div
         className={`fixed inset-0 bg-black/50 z-40 transition-opacity duration-300 md:hidden ${
           isOpen ? "opacity-100" : "opacity-0 pointer-events-none"
         }`}
@@ -231,7 +273,7 @@ const Navbar = () => {
       />
 
       {/* Mobile Menu Drawer */}
-      <aside 
+      <aside
         ref={mobileMenuRef}
         className={`fixed top-0 left-0 w-64 h-full bg-white shadow-2xl z-50 transform transition-transform duration-300 ease-in-out md:hidden flex flex-col ${
           isOpen ? "translate-x-0" : "-translate-x-full"
@@ -239,7 +281,7 @@ const Navbar = () => {
       >
         <div className="p-6 flex items-center justify-between border-b border-gray-100">
           <img src={logo} alt="Logo" className="w-24" />
-          <button onClick={() => setIsOpen(false)} className="text-gray-500 hover:text-black">
+          <button aria-label="Close Menu" onClick={() => setIsOpen(false)} className="text-gray-500 hover:text-black">
             <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M6 18L18 6M6 6l12 12"></path>
             </svg>

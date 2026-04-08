@@ -189,7 +189,6 @@ const getVendorOrders = async (req, res) => {
 ========================= */
 const getAllVendors = async (req, res) => {
   try {
-    // Debug (keep for now)
     console.log("ADMIN USER:", req.user);
 
     if (!req.user) {
@@ -200,12 +199,51 @@ const getAllVendors = async (req, res) => {
       return res.status(403).json({ message: "Access denied" });
     }
 
-    const vendors = await regisSchema
-      .find({ role: "seller" })
-      .select("-password")
-      .sort({ createdAt: -1 });
+    const {
+      status,
+      search,
+      page = 1,
+      limit = 10
+    } = req.query;
 
-    res.status(200).json(vendors);
+    // 🔍 FILTER BASE
+    let filter = { role: "seller" };
+
+    // 🎯 Filter by status
+    if (status) {
+      filter.status = status; // active / suspended / deactivated
+    }
+
+    // 🔎 Search by name or email
+    if (search) {
+      filter.$or = [
+        { name: { $regex: search, $options: "i" } },
+        { email: { $regex: search, $options: "i" } }
+      ];
+    }
+
+    // 📄 Pagination logic
+    const skip = (Number(page) - 1) * Number(limit);
+
+    const vendors = await regisSchema
+      .find(filter)
+      .select("-password")
+      .sort({ createdAt: -1 })
+      .skip(skip)
+      .limit(Number(limit));
+
+    const total = await regisSchema.countDocuments(filter);
+
+    res.status(200).json({
+      success: true,
+      vendors,
+      pagination: {
+        total,
+        page: Number(page),
+        pages: Math.ceil(total / limit),
+      },
+    });
+
   } catch (error) {
     console.error("GET ALL VENDORS ERROR:", error);
     res.status(500).json({ message: "Failed to fetch vendors" });

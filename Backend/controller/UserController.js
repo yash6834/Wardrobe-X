@@ -114,6 +114,21 @@ const loginUser = async (req, res) => {
       return res.status(400).json({ msg: "Invalid password." });
     }
 
+    // 🔴 ADD THIS BLOCK HERE
+    if (user.status === "deactivated") {
+      return res.status(403).json({
+        msg: "Your account has been deactivated by admin",
+      });
+    }
+
+    // 🟡 OPTIONAL (for suspend)
+    if (user.status === "suspended") {
+      return res.status(403).json({
+        msg: "Your account is temporarily suspended",
+      });
+    }
+
+    // ✅ THEN GENERATE TOKEN
     const token = generateToken(user._id);
 
     // 🔥 ACTIVE MEMBERSHIP (BACKEND TRUTH)
@@ -130,6 +145,7 @@ const loginUser = async (req, res) => {
         name: user.name,
         email: user.email,
         role: user.role,
+        status: user.status, // ✅ IMPORTANT (send this)
         memberships: user.memberships || [],
         activeMembership,
       },

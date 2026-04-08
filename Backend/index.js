@@ -20,15 +20,14 @@ const payoutRoutes = require("./routes/PayoutRoutes");
 const membershipRoutes = require("./routes/MemmbershipRoutes");
 const returnRoutes = require("./routes/ReturnRoutes");
 const notificationRoutes = require("./routes/NotificationRoutes");
-const CMSRoutes = require("./routes/CMSRoutes")
-const activityroutes = require("./routes/ActivityRoutes")
+const CMSRoutes = require("./routes/CMSRoutes");
+const activityroutes = require("./routes/ActivityRoutes");
 const recommendationRoutes = require("./routes/Recomendation");
 const paymentRoutes = require("./routes/Payment");
 const fraudRoutes = require("./routes/Froud");
-const currencyRoutes = require( "./routes/CurrencyRoutes");
+const currencyRoutes = require("./routes/CurrencyRoutes");
 const { router: pushRoutes } = require("./routes/pushRoutes");
-
-
+const checkVendorActive = require("./middlewares/CheckVendoAactive");
 
 const app = express();
 
@@ -48,59 +47,68 @@ connDB();
 
 /* ================= UPLOADS ================= */
 const uploadsDir = path.join(__dirname, "uploads");
+
 if (!fs.existsSync(uploadsDir)) {
   fs.mkdirSync(uploadsDir, { recursive: true });
 }
+
+// Serve uploads
 app.use("/uploads", express.static(uploadsDir));
 app.use("/uploads", express.static("uploads"));
 
-
 /* ================= ROUTES ================= */
 
-// AUTH & USER
+// 🔐 AUTH & USER
 app.use("/api/auth", authRoutes);
 app.use("/api/users", userRoutes);
 
-// USER FLOW
+// 🛍️ USER FLOW
 app.use("/api/product", productRoutes);
 app.use("/api/cart", cartRoutes);
 app.use("/api/orders", orderRoutes);
 
-// RETURNS & EXCHANGE
+// 🔁 RETURNS & EXCHANGE
 app.use("/api/returns", returnRoutes);
 
-// MEMBERSHIP
+// 🎫 MEMBERSHIP
 app.use("/api/membership", membershipRoutes);
 
-// ADMIN
+// 🧑‍💼 ADMIN
 app.use("/api/admin/dashboard", adminDashboardRoutes);
 app.use("/api/admin", adminProductRoutes);
 app.use("/api/admin", adminRoutes);
 
-// VENDOR & PAYOUT
-app.use("/api/vendor", vendorRoutes);
+// 🏪 VENDOR (🔥 WITH GLOBAL STATUS CHECK)
+app.use("/api/vendor", checkVendorActive, vendorRoutes);
+
+// 💰 PAYOUT
 app.use("/api", payoutRoutes);
 
-//Notification
+// 🔔 NOTIFICATIONS
 app.use("/api/notifications", notificationRoutes);
 
+// 📰 CMS
 app.use("/api/cms", CMSRoutes);
 
-app.use("/api/activity",activityroutes );
+// 📊 ACTIVITY TRACKING
+app.use("/api/activity", activityroutes);
 
-
+// 🤖 RECOMMENDATIONS
 app.use("/api/recommendations", recommendationRoutes);
 
+// 💳 PAYMENTS
 app.use("/api", paymentRoutes);
 
-
+// 🛡️ FRAUD DETECTION
 app.use("/api", fraudRoutes);
 
-
-
+// 💱 CURRENCY
 app.use("/api/currency", currencyRoutes);
 
+// 🔔 PUSH NOTIFICATIONS
 app.use("/api", pushRoutes);
+
+
 
 /* ================= HEALTH CHECK ================= */
 app.get("/", (req, res) => {
@@ -115,6 +123,7 @@ app.use((err, req, res, next) => {
 
 /* ================= SERVER ================= */
 const PORT = process.env.PORT || 3000;
+
 app.listen(PORT, () => {
   console.log(`🚀 Server running on port ${PORT}`);
 });
