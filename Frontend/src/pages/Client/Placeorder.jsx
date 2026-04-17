@@ -281,207 +281,243 @@ const Checkout = () => {
     );
   }
 
-  return (
-    <main>
-      <div className="max-w-[1200px] mx-auto px-6">
 
-        {/* Breadcrumb Header - Hidden on Small Mobile */}
-        <div className="hidden sm:flex items-center gap-2 mb-6 text-xs font-medium text-gray-400">
-          <span>Cart</span> <ChevronRight size={12} /> <span className="text-black">Checkout</span> <ChevronRight size={12} /> <span className="opacity-50">Payment</span>
-        </div>
+return (
+  <main className="min-h-screen bg-gradient-to-br from-gray-50 to-gray-100 py-10 lg:py-12">
+    <div className="max-w-7xl mx-auto px-6 lg:px-10">
 
-        <form onSubmit={handleSubmit} className="flex flex-col lg:flex-row gap-6 lg:gap-10 items-start">
+      <form
+        onSubmit={handleSubmit}
+        className="flex flex-col lg:flex-row gap-8 lg:gap-12 items-start"
+      >
 
-          {/* LEFT: INFORMATION PANELS */}
-          <div className="w-full lg:flex-[1.8] flex flex-col gap-6 order-2 lg:order-1">
+        {/* LEFT */}
+        <div className="w-full lg:flex-[1.8] flex flex-col gap-8 order-2 lg:order-1">
 
-            {/* Shipping Card */}
-            <div className="bg-white p-5 md:p-8 rounded-[2rem] border border-gray-100 shadow-sm">
-              <div className="flex items-center gap-3 mb-6">
-                <div className="bg-black text-white p-2.5 rounded-xl shadow-lg shadow-black/10"><MapPin size={18} /></div>
-                <h3 className="text-lg font-bold tracking-tight">Delivery Details</h3>
+          {/* DELIVERY CARD */}
+          <div className="bg-white/80 backdrop-blur-md p-8 rounded-2xl border border-gray-200 shadow-[0_8px_30px_rgba(0,0,0,0.05)] hover:shadow-[0_12px_40px_rgba(0,0,0,0.08)] transition-all">
+
+            <div className="flex items-center gap-3 mb-6 pb-4 border-b border-gray-100">
+              <div className="bg-gray-100 p-2 rounded-lg">
+                <MapPin size={20} />
               </div>
-
-              <div className="grid grid-cols-1 md:grid-cols-6 gap-x-4 gap-y-5">
-                <div className="md:col-span-4">
-                  <label className={labelClass}>Recipient Name</label>
-                  <input value={formData.name} onChange={(e) => setFormData({ ...formData, name: e.target.value })} className={inputClass("name")} placeholder="Full Name" />
-                </div>
-                <div className="md:col-span-2">
-                  <label className={labelClass}>Phone Number</label>
-                  <div className="relative">
-                    <input value={formData.phone} onChange={(e) => setFormData({ ...formData, phone: e.target.value })} className={inputClass("phone")} placeholder="Phone Number" />
-                    <Phone size={14} className="absolute right-4 top-4 text-gray-300" />
-                  </div>
-                </div>
-                <div className="md:col-span-6">
-                  <label className={labelClass}>Residential Address</label>
-                  <input value={formData.address} onChange={(e) => setFormData({ ...formData, address: e.target.value })} className={inputClass("address")} placeholder="Street, Apartment, Landmark" />
-                </div>
-                <div className="md:col-span-2">
-                  <label className={labelClass}>City</label>
-                  <input value={formData.city} onChange={(e) => setFormData({ ...formData, city: e.target.value })} className={inputClass("city")} placeholder="City" />
-                </div>
-                <div className="md:col-span-2">
-                  <label className={labelClass}>State</label>
-                  <input value={formData.state} onChange={(e) => setFormData({ ...formData, state: e.target.value })} className={inputClass("state")} placeholder="State" />
-                </div>
-                <div className="md:col-span-2">
-                  <label className={labelClass}>Postal Code</label>
-                  <input value={formData.zip} onChange={(e) => setFormData({ ...formData, zip: e.target.value })} className={inputClass("zip")} placeholder="Zip Code" />
-                </div>
-              </div>
+              <h3 className="text-lg font-bold text-gray-900">
+                Delivery Details
+              </h3>
             </div>
 
-            {/* Payment Method Card */}
-            <div className="bg-white p-5 md:p-8 rounded-[2rem] border border-gray-100 shadow-sm">
-              <div className="flex items-center gap-3 mb-6">
-                <div className="bg-black text-white p-2.5 rounded-xl shadow-lg shadow-black/10"><CreditCard size={18} /></div>
-                <h3 className="text-lg font-bold tracking-tight">Payment Method</h3>
+            <div className="grid grid-cols-1 md:grid-cols-6 gap-5">
+
+              <div className="md:col-span-4">
+                <label className={labelClass}>Recipient Name</label>
+                <input
+                  value={formData.name}
+                  onChange={(e) =>
+                    setFormData({ ...formData, name: e.target.value })
+                  }
+                  className={inputClass()}
+                  placeholder="Full Name"
+                />
               </div>
 
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                <button
-                  type="button"
-                  onClick={() => setFormData({ ...formData, paymentMethod: "cod" })}
-                  className={`group flex items-center p-4 md:p-5 border-2 rounded-2xl transition-all ${formData.paymentMethod === 'cod' ? 'border-black bg-black/[0.02]' : 'border-gray-50 hover:border-gray-200'}`}
-                >
-                  <div className={`p-3 rounded-xl mr-4 transition-colors ${formData.paymentMethod === 'cod' ? 'bg-black text-white' : 'bg-gray-100 text-gray-400'}`}>
-                    <Banknote size={22} />
-                  </div>
-                  <div className="text-left">
-                    <p className="text-sm font-bold">Pay on Delivery</p>
-                    <p className="hidden xs:block text-[10px] text-gray-400 font-medium">Cash or QR at your doorstep</p>
-                  </div>
-                </button>
-
-                <button
-                  type="button"
-                  onClick={() => setFormData({ ...formData, paymentMethod: "card" })}
-                  className={`group flex items-center p-4 md:p-5 border-2 rounded-2xl transition-all ${formData.paymentMethod === 'card' ? 'border-black bg-black/[0.02]' : 'border-gray-50 hover:border-gray-200'}`}
-                >
-                  <div className={`p-3 rounded-xl mr-4 transition-colors ${formData.paymentMethod === 'card' ? 'bg-black text-white' : 'bg-gray-100 text-gray-400'}`}>
-                    <CreditCard size={22} />
-                  </div>
-                  <div className="text-left">
-                    <p className="text-sm font-bold">Online Payment</p>
-                    <p className="hidden xs:block text-[10px] text-gray-400 font-medium">UPI, Cards, or Netbanking</p>
-                  </div>
-                </button>
-              </div>
-            </div>
-          </div>
-
-          {/* RIGHT: PREMIUM SUMMARY PANEL (Sticky on Desktop) */}
-          <div className="w-full lg:flex-1 lg:sticky lg:top-24 order-1 lg:order-2">
-            <div className="bg-[#0F172A] text-white p-7 md:p-9 rounded-[2.5rem] flex flex-col shadow-2xl shadow-blue-900/20">
-              <div className="flex justify-between items-center mb-8">
-                <h3 className="text-xl font-bold tracking-tight flex items-center gap-2">
-                  <ShoppingBag className="text-slate-400" size={20} /> Order Summary
-                </h3>
-                <span className="bg-white/10 px-3 py-1 rounded-full text-[10px] font-bold uppercase tracking-widest">{cartList.length} Items</span>
-              </div>
-
-              <div className="space-y-4 text-sm mb-8">
-                <div className="flex justify-between text-slate-400">
-                  <span>Subtotal</span>
-                  <span className="text-white font-semibold">{currencySymbols[currency]}{subtotal.toFixed(2)}</span>
-                </div>
-                {discountPercent > 0 && (
-                  <div className="flex justify-between items-center bg-emerald-500/10 p-3.5 rounded-xl text-emerald-400 border border-emerald-500/20">
-                    <span className="text-[10px] font-black uppercase tracking-widest">Member Discount</span>
-                    <span className="font-bold">-{currencySymbols[currency]}{discountAmount.toFixed(2)}</span>
-                  </div>
-                )}
-                <div className="flex justify-between text-slate-400">
-                  <span>Shipping Fee</span>
-                  <span className="text-white font-semibold">{shipping === 0 ? "FREE" : `${currencySymbols[currency]}${shipping.toFixed(2)}`}</span>
-                </div>
-                <div className="flex justify-between text-slate-400">
-                  <span>Estimated Tax (2%)</span>
-                  <span className="text-white font-semibold">{currencySymbols[currency]}{tax.toFixed(2)}</span>
+              <div className="md:col-span-2">
+                <label className={labelClass}>Phone Number</label>
+                <div className="relative">
+                  <input
+                    value={formData.phone}
+                    onChange={(e) =>
+                      setFormData({ ...formData, phone: e.target.value })
+                    }
+                    className={inputClass()}
+                    placeholder="Phone Number"
+                  />
+                  <Phone
+                    size={16}
+                    className="absolute right-4 top-3.5 text-gray-400"
+                  />
                 </div>
               </div>
 
-              <div className="pt-6 border-t border-white/10">
-                <div className="flex justify-between items-end mb-8">
-                  <div>
-                    <p className="text-[10px] text-slate-500 uppercase tracking-widest font-bold mb-1">Total Payable</p>
-                    <p className="text-3xl font-black tracking-normal">{currencySymbols[currency]}{total.toFixed(2)}</p>
-                  </div>
-                  <div className="bg-white/5 p-3 rounded-xl border border-white/10 hidden md:block">
-                    <ShieldCheck size={24} className="text-slate-400" />
-                  </div>
-                </div>
+              <div className="md:col-span-6">
+                <label className={labelClass}>Address</label>
+                <input
+                  value={formData.address}
+                  onChange={(e) =>
+                    setFormData({ ...formData, address: e.target.value })
+                  }
+                  className={inputClass()}
+                  placeholder="Street, Apartment, Landmark"
+                />
+              </div>
 
+              <div className="md:col-span-2">
+                <label className={labelClass}>City</label>
+                <input
+                  value={formData.city}
+                  onChange={(e) =>
+                    setFormData({ ...formData, city: e.target.value })
+                  }
+                  className={inputClass()}
+                  placeholder="City"
+                />
+              </div>
 
-                {!isOnline && (
-                  <p className="text-red-500 text-sm text-center mb-3">
-                    ⚠️ You are offline. Orders are disabled.
-                  </p>
-                )}
-                <button
-                  type="submit"
-                  disabled={!isOnline}
-                  className={`w-full py-4 rounded-2xl font-black text-xs md:text-sm uppercase tracking-widest flex items-center justify-center gap-3
-    ${!isOnline
-                      ? "bg-gray-400 cursor-not-allowed text-white"
-                      : "bg-slate-50 text-black hover:bg-emerald-400"}
-  `}
-                >
-                  Place Order <Lock size={16} />
-                </button>
+              <div className="md:col-span-2">
+                <label className={labelClass}>State</label>
+                <input
+                  value={formData.state}
+                  onChange={(e) =>
+                    setFormData({ ...formData, state: e.target.value })
+                  }
+                  className={inputClass()}
+                  placeholder="State"
+                />
+              </div>
 
-                <div className="mt-6 flex flex-wrap justify-center gap-4 opacity-20 grayscale transition-all hover:opacity-40">
-                  <span className="text-[8px] font-bold border border-white px-1.5 rounded uppercase">Visa</span>
-                  <span className="text-[8px] font-bold border border-white px-1.5 rounded uppercase">Mastercard</span>
-                  <span className="text-[8px] font-bold border border-white px-1.5 rounded uppercase">Razorpay</span>
-                </div>
+              <div className="md:col-span-2">
+                <label className={labelClass}>Postal Code</label>
+                <input
+                  value={formData.zip}
+                  onChange={(e) =>
+                    setFormData({ ...formData, zip: e.target.value })
+                  }
+                  className={inputClass()}
+                  placeholder="Zip Code"
+                />
               </div>
             </div>
           </div>
 
-        </form>
-      </div>
+          {/* PAYMENT */}
+          <div className="bg-white/80 backdrop-blur-md p-8 rounded-2xl border border-gray-200 shadow-[0_8px_30px_rgba(0,0,0,0.05)]">
 
-      {/* SUCCESS MODAL */}
-      {showSuccessModal && (
-        <div className="fixed inset-0 z-[100] flex items-center justify-center bg-slate-900/80 backdrop-blur-md p-4">
-          <div className="bg-white rounded-[3rem] p-10 md:p-14 max-w-sm w-full text-center shadow-2xl scale-up-center">
-            <div className="w-20 h-20 bg-emerald-50 text-emerald-500 rounded-full flex items-center justify-center mx-auto mb-8">
-              <CheckCircle2 size={40} />
+            <div className="flex items-center gap-3 mb-6 pb-4 border-b border-gray-100">
+              <div className="bg-gray-100 p-2 rounded-lg">
+                <CreditCard size={20} />
+              </div>
+              <h3 className="text-lg font-bold text-gray-900">
+                Payment Method
+              </h3>
             </div>
-            <h3 className="text-2xl font-black mb-2">Order Confirmed</h3>
-            <p className="text-gray-500 text-sm mb-10 leading-relaxed">Thank you for choosing Wardrobe X. We've sent a confirmation to your email.</p>
-            <button onClick={() => (window.location.href = "/")} className="w-full bg-black text-white py-4.5 rounded-2xl font-bold shadow-xl active:scale-95 transition-all">Back to Home</button>
-          </div>
-        </div>
-      )}
 
-      {/* COD CONFIRMATION MODAL */}
-      {showCODModal && (
-        <div className="fixed inset-0 z-[100] flex items-center justify-center bg-slate-900/80 backdrop-blur-md p-4">
-          <div className="bg-white rounded-[2.5rem] p-10 max-w-sm w-full text-center shadow-2xl">
-            <div className="w-16 h-16 bg-gray-50 rounded-2xl flex items-center justify-center mx-auto mb-6">
-              <Banknote size={32} className="text-black" />
-            </div>
-            <h3 className="text-xl font-bold mb-2 tracking-tight">Confirm COD Order?</h3>
-            <p className="text-gray-500 text-sm mb-8 leading-relaxed">Pay <span className="text-black font-bold">{currencySymbols[currency]}{total.toFixed(2)}</span> at the time of delivery.</p>
-            <div className="flex flex-col gap-3">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+
+              {/* COD */}
               <button
-                onClick={confirmCODOrder}
-                disabled={placingOrder}
-                className="w-full bg-black text-white py-4 rounded-2xl font-bold flex items-center justify-center gap-2 active:scale-95 transition-all"
+                type="button"
+                onClick={() =>
+                  setFormData({ ...formData, paymentMethod: "cod" })
+                }
+                className={`flex items-center p-4 rounded-xl border transition-all active:scale-[0.97]
+                ${
+                  formData.paymentMethod === "cod"
+                    ? "bg-black text-white border-black shadow-md"
+                    : "border-gray-200 hover:border-black hover:bg-gray-50"
+                }`}
               >
-                {placingOrder ? <Loader2 className="animate-spin" size={20} /> : "Yes, Place Order"}
+                <div
+                  className={`p-2.5 rounded-lg mr-4 ${
+                    formData.paymentMethod === "cod"
+                      ? "bg-white text-black"
+                      : "bg-gray-100 text-gray-500"
+                  }`}
+                >
+                  <Banknote size={20} />
+                </div>
+                <div className="text-left">
+                  <p className="text-sm font-bold">Pay on Delivery</p>
+                  <p className="text-xs opacity-70">
+                    Cash or QR at your doorstep
+                  </p>
+                </div>
               </button>
-              <button onClick={() => setShowCODModal(false)} className="text-gray-400 text-xs font-bold uppercase tracking-widest py-4 hover:text-black transition-colors">Go Back</button>
+
+              {/* ONLINE */}
+              <button
+                type="button"
+                onClick={() =>
+                  setFormData({ ...formData, paymentMethod: "card" })
+                }
+                className={`flex items-center p-4 rounded-xl border transition-all active:scale-[0.97]
+                ${
+                  formData.paymentMethod === "card"
+                    ? "bg-black text-white border-black shadow-md"
+                    : "border-gray-200 hover:border-black hover:bg-gray-50"
+                }`}
+              >
+                <div
+                  className={`p-2.5 rounded-lg mr-4 ${
+                    formData.paymentMethod === "card"
+                      ? "bg-white text-black"
+                      : "bg-gray-100 text-gray-500"
+                  }`}
+                >
+                  <CreditCard size={20} />
+                </div>
+                <div className="text-left">
+                  <p className="text-sm font-bold">Online Payment</p>
+                  <p className="text-xs opacity-70">
+                    UPI, Cards, Netbanking
+                  </p>
+                </div>
+              </button>
+
             </div>
           </div>
         </div>
-      )}
-    </main>
-  );
+
+        {/* RIGHT PANEL */}
+        <div className="w-full lg:flex-1 lg:sticky lg:top-8 order-1 lg:order-2">
+          <div className="bg-gradient-to-br from-white to-gray-50 p-8 rounded-2xl border border-gray-200 shadow-lg">
+
+            <div className="flex justify-between items-center mb-6 pb-6 border-b border-gray-100">
+              <h3 className="text-lg font-bold">Order Summary</h3>
+              <span className="text-xs bg-gray-100 px-2 py-1 rounded-md font-bold">
+                {cartList.length} Items
+              </span>
+            </div>
+
+            <div className="space-y-4 text-sm mb-6">
+
+              <div className="flex justify-between">
+                <span>Subtotal</span>
+                <span>₹{subtotal.toFixed(2)}</span>
+              </div>
+
+              <div className="flex justify-between">
+                <span>Shipping</span>
+                <span>{shipping === 0 ? "FREE" : `₹${shipping}`}</span>
+              </div>
+
+              <div className="flex justify-between">
+                <span>Tax</span>
+                <span>₹{tax.toFixed(2)}</span>
+              </div>
+
+            </div>
+
+            <div className="border-t pt-6">
+
+              <p className="text-xs text-gray-500">Total</p>
+              <p className="text-4xl font-extrabold tracking-tight mb-6">
+                ₹{total.toFixed(2)}
+              </p>
+
+              <button
+                type="submit"
+                className="w-full py-4 rounded-xl bg-black text-white font-bold hover:bg-gray-900 active:scale-[0.97] shadow-lg hover:shadow-xl transition-all"
+              >
+                Place Order
+              </button>
+
+            </div>
+          </div>
+        </div>
+
+      </form>
+    </div>
+  </main>
+);
 };
 
 export default Checkout;
