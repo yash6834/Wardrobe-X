@@ -4,12 +4,12 @@ const api = axios.create({
   baseURL: "http://localhost:3000",
 });
 
-/* 🔐 Attach token (admin OR user/vendor) */
+/*  Attach token (admin OR user/vendor) */
 api.interceptors.request.use(
   (config) => {
     const token =
-      localStorage.getItem("adminToken") || // admin
-      localStorage.getItem("token");       // user / vendor
+      localStorage.getItem("adminToken") || 
+      localStorage.getItem("token");       
 
     if (token) {
       config.headers.Authorization = `Bearer ${token}`;
@@ -25,7 +25,7 @@ api.interceptors.request.use(
 
 
 
-/* ================= AUTH APIS ================= */
+/* AUTH APIS  */
 export const login = (data) => api.post("/api/users/login", data);
 export const register = (data) => api.post("/api/users/add", data);
 

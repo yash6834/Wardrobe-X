@@ -18,9 +18,7 @@ const { captureDevice } = require("../middlewares/DeviceTracker");
 const { paymentLimiter } = require("../middlewares/rateLimiter");
 
 
-/* =================================================
-   ADMIN ROUTES
-================================================= */
+/*  ADMIN ROUTES */
 
 router.post(
   "/admin/payout/:vendorId",
