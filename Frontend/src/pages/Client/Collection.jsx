@@ -21,7 +21,7 @@ const Collection = () => {
   const [user, setUser] = useState(null);
   const [showMobileFilters, setShowMobileFilters] = useState(false);
 
-  const backendURL = "http://localhost:3000";
+  const backendURL = "https://wardrobe-x.onrender.com";
 
   const currencySymbols = {
     INR: "₹",

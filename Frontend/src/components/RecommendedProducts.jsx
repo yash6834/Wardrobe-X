@@ -2,7 +2,7 @@ import { useEffect, useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import api from "../api/api";
 
-const BASE_URL = "http://localhost:3000";
+const BASE_URL = "https://wardrobe-x.onrender.com";
 
 const RecommendedProducts = () => {
 

@@ -8,7 +8,7 @@ const VendorViewProducts = () => {
   const [products, setProducts] = useState([]);
   const [selectedProduct, setSelectedProduct] = useState(null);
 
-  const BASE_URL = "http://localhost:3000";
+  const BASE_URL = "https://wardrobe-x.onrender.com";
 
   const fetchProducts = async () => {
     try {

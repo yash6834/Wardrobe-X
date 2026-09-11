@@ -47,7 +47,7 @@ exports.forgotPassword = async (req, res) => {
     );
 
     // Send reset link to user's email
-    const resetLink = `http://localhost:5173/reset-password/${resetToken}`;
+    const resetLink = `https://wardrobe-x.onrender.com/reset-password/${resetToken}`;
     await sendEmail(
       user.email,
       "Password Reset Request",

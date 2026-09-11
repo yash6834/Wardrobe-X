@@ -11,7 +11,7 @@ import {
   ArrowUpRight
 } from "lucide-react";
 
-const BASE_URL = "http://localhost:3000";
+const BASE_URL = "https://wardrobe-x.onrender.com";
 
 const VendorReturns = () => {
   const [returns, setReturns] = useState([]);

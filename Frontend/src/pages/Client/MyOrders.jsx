@@ -162,7 +162,7 @@ const MyOrders = () => {
                           <img
                             src={
                               item.product?.image?.length
-                                ? `http://localhost:3000${item.product.image[0]}`
+                                ? `https://wardrobe-x.onrender.com${item.product.image[0]}`
                                 : "/placeholder.png"
                             }
                             className="w-20 h-20 object-cover rounded-2xl border border-slate-100"
@@ -240,7 +240,7 @@ const MyOrders = () => {
 
                     return (
                       <div key={idx} className="flex gap-4 p-3 rounded-2xl border border-slate-50 bg-slate-50/30">
-                        <img src={item.product?.image?.length ? `http://localhost:3000${item.product.image[0]}` : "/placeholder.png"} className="w-14 h-14 rounded-xl object-cover" alt="" />
+                        <img src={item.product?.image?.length ? `https://wardrobe-x.onrender.com${item.product.image[0]}` : "/placeholder.png"} className="w-14 h-14 rounded-xl object-cover" alt="" />
                         <div className="flex-1 text-sm">
                           <p className="font-bold text-slate-800">{item.product?.name}</p>
                           <p className="text-slate-500">Qty: {item.quantity} | {item.size}</p>

@@ -250,7 +250,7 @@ const VendorEditProduct = () => {
                 {/* Existing Images */}
                 {existingImages.map((img, index) => (
                   <div key={`exist-${index}`} className="group relative aspect-square rounded-lg overflow-hidden border border-gray-200">
-                    <img src={`http://localhost:3000${img}`} className="h-full w-full object-cover" alt="" />
+                    <img src={`https://wardrobe-x.onrender.com${img}`} className="h-full w-full object-cover" alt="" />
                     <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
                       <button type="button" onClick={() => removeExistingImage(index)} className="bg-red-500 text-white p-1.5 rounded-full hover:scale-110 transition-transform">
                         <X size={14} />

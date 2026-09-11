@@ -2,7 +2,7 @@ import React, { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import api from "../api/api";
 
-const BASE_URL = "http://localhost:3000";
+const BASE_URL = "https://wardrobe-x.onrender.com";
 
 const AlsoBought = ({ productId }) => {
   const navigate = useNavigate();

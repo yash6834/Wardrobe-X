@@ -29,7 +29,7 @@ const VendorOrders = () => {
   const [updating, setUpdating] = useState(false);
   const [confirmDelivery, setConfirmDelivery] = useState(null);
 
-  const BASE_URL = "http://localhost:3000";
+  const BASE_URL = "https://wardrobe-x.onrender.com";
 
   useEffect(() => {
     fetchVendorOrders();

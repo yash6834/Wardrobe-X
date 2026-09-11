@@ -97,7 +97,7 @@ const ViewProducts = () => {
                 <img
   src={
     item.image && item.image.length > 0
-      ? `http://localhost:3000${item.image[0]}`
+      ? `https://wardrobe-x.onrender.com${item.image[0]}`
       : "https://via.placeholder.com/400"
   }
   alt={item.name}

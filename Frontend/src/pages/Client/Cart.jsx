@@ -208,7 +208,7 @@ const Cart = () => {
                     <img
                       src={
                         product.image?.length
-                          ? `http://localhost:3000${product.image[0]}`
+                          ? `https://wardrobe-x.onrender.com${product.image[0]}`
                           : "https://placehold.co/300x400/F6F6F6/A1A1AA?text=Offline\nItem" // Better offline image!
                       }
                       alt={product.name}

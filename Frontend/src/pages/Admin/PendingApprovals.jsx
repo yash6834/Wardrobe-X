@@ -12,7 +12,7 @@ import {
   ExternalLink 
 } from "lucide-react";
 
-const BASE_URL = "http://localhost:3000";
+const BASE_URL = "https://wardrobe-x.onrender.com";
 
 const PendingApprovals = () => {
   const [products, setProducts] = useState([]);

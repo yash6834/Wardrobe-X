@@ -9,7 +9,7 @@ import {
 } from "lucide-react";
 import api from "../../api/api";
 
-const BASE_URL = "http://localhost:3000";
+const BASE_URL = "https://wardrobe-x.onrender.com";
 
 const ViewOrders = () => {
   const [orders, setOrders] = useState([]);

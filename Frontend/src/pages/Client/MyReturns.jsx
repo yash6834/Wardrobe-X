@@ -168,7 +168,7 @@ const MyReturns = () => {
                       <img
                         src={
                           item.product?.image?.length
-                            ? `http://localhost:3000${item.product.image[0]}`
+                            ? `https://wardrobe-x.onrender.com${item.product.image[0]}`
                             : "/placeholder.png"
                         }
                         alt={item.product?.name}
